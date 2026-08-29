@@ -1,0 +1,142 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* Main Page Layout */
+.register-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background-color: #D3C9C1; /* Warm beige background */
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+
+/* Form Card Container */
+.register-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 3rem 2.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  color: #333333;
+}
+
+/* Card Heading */
+.register-card h2 {
+  margin-top: 0;
+  margin-bottom: 0.75rem;
+  color: #111111;
+  font-size: 2.2rem;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  text-align: left;
+}
+
+/* Card Subtitle */
+.register-card p {
+  color: #555555;
+  font-size: 0.9rem;
+  margin-top: 0;
+  margin-bottom: 2rem;
+  text-align: left;
+  line-height: 1.5;
+}
+
+/* Input Group Container */
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+/* Label Styling */
+.form-group label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444444;
+  margin-bottom: 0.4rem;
+}
+
+/* Inputs & Select Elements */
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 1px solid #E2E2E2;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #333333;
+  outline: none;
+  transition: all 0.2s ease;
+  font-family: 'Inter', sans-serif;
+  box-sizing: border-box;
+}
+
+.form-group input::placeholder {
+  color: #999999;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  border-color: #A38C82;
+  box-shadow: 0 0 0 3px rgba(163, 140, 130, 0.15);
+}
+
+.form-group select {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23999999%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 0.6rem auto;
+  padding-right: 2.5rem;
+}
+
+/* Dynamic Validation Error Text */
+.error-message {
+  color: #c93b3b;
+  font-size: 0.78rem;
+  margin-top: 0.35rem;
+  display: block;
+  font-weight: 500;
+}
+
+/* Submit Pill Button */
+.btn-submit {
+  display: inline-block;
+  width: auto;
+  padding: 0.5rem 1.75rem;
+  background-color: #634E45;
+  color: #ffffff;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-submit:hover {
+  background-color: #4A3A33;
+}
+
+/* Footer Login Link */
+.login-link {
+  text-align: left;
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: #555555;
+}
+
+.login-link a {
+  color: #A38C82;
+  text-decoration: none;
+  font-weight: 600;
+  margin-left: 0.25rem;
+}
+
+.login-link a:hover {
+  text-decoration: underline;
+}

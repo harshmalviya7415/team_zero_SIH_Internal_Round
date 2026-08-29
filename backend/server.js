@@ -18,7 +18,7 @@ app.use(
   }),
 );
 
-const { auth } = require("./config/auth");
+const { auth } = require("./middelware/auth");
 const { usercreat } = require("./controller/usercreate");
 const { userlogin } = require("./controller/userlogin");
 const { printercreat } = require("./controller/printercreate");

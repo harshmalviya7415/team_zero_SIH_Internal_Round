@@ -18,7 +18,7 @@ const jobcreat = async (req, res) => {
       printpagenos,
       printpapersize,
       printcolor,
-      printstatus: "Pending", 
+      printstatus: "Pending",
     });
 
     console.log("print job created");

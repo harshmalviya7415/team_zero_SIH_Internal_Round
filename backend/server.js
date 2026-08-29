@@ -19,6 +19,7 @@ app.use(
 );
 
 const { usercreat } = require("./controller/usercreate");
+const { printercreat } = require("./controller/printercreate");
 
 const PORT = process.env.PORT || 1500;
 
@@ -27,6 +28,7 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/user/create", usercreat);
+app.post("/api/printer/create", printercreat);
 
 app.listen(PORT, async () => {
   await connectDb();

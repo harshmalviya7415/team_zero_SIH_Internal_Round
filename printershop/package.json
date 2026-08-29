@@ -1,0 +1,37 @@
+{
+  "name": "printershop",
+  "version": "0.0.1",
+  "description": "This is The Printer agent",
+  "keywords": [
+    "printeragent",
+    "electronapp",
+    "printershop"
+  ],
+  "homepage": "https://github.com/harshmalviya7415/team_zero_SIH_Internal_Round#readme",
+  "bugs": {
+    "url": "https://github.com/harshmalviya7415/team_zero_SIH_Internal_Round/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/harshmalviya7415/team_zero_SIH_Internal_Round.git"
+  },
+  "license": "MIT",
+  "author": "Harsh Malviya",
+  "type": "commonjs",
+  "main": "main.js",
+  "scripts": {
+    "build:frontend": "cd frontend && npm run build",
+    "start": "npm run build:frontend && electron .",
+    "dev:frontend": "cd frontend && npm run dev -- --host 0.0.0.0",
+    "dev:electron": "electronmon .",
+    "dev": "concurrently \"npm run dev:frontend\" \"npm run dev:electron\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "electron": "^44.0.0"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5",
+    "electronmon": "^2.0.4"
+  }
+}

@@ -1,0 +1,467 @@
+import { useState } from "react";
+import "./PrinterDashboard.css";
+
+
+const STATUS_LABEL = {
+  open: "Open · Available now",
+  busy: "Busy",
+  closed: "Closed",
+  scheduled: "Open · Scheduled only",
+};
+
+const JOB_STATUS_LABEL = {
+  payment_pending: "Payment pending",
+  payment_failed: "Payment failed",
+  printing: "Printing",
+  ready: "Ready for pickup",
+  collected: "Collected",
+};
+
+const INITIAL_SHOPS = [
+  {
+    id: "shop-1",
+    name: "QuickPrint Koramangala",
+    distance: "0.4 km away",
+    status: "open",
+    services: ["Color", "B/W", "Scan"],
+  },
+  {
+    id: "shop-2",
+    name: "CampusXerox NITK",
+    distance: "1.2 km away",
+    status: "busy",
+    services: ["B/W", "Scan"],
+  },
+  {
+    id: "shop-3",
+    name: "Elite Digital Prints",
+    distance: "2.1 km away",
+    status: "scheduled",
+    services: ["Color", "B/W"],
+    availableFrom: "4:00 PM today",
+  },
+  {
+    id: "shop-4",
+    name: "Print & Bind Corner",
+    distance: "0.9 km away",
+    status: "closed",
+    services: ["B/W"],
+  },
+];
+
+const INITIAL_JOBS = [
+  {
+    id: "job-101",
+    fileName: "assignment_report.pdf",
+    shopName: "QuickPrint Koramangala",
+    pages: 12,
+    color: "B/W",
+    copies: 1,
+    orientation: "Portrait",
+    amount: 24,
+    status: "ready",
+    pickupTime: "5:30 PM today",
+  },
+  {
+    id: "job-102",
+    fileName: "lab_manual.pdf",
+    shopName: "CampusXerox NITK",
+    pages: 5,
+    color: "Color",
+    copies: 2,
+    orientation: "Portrait",
+    amount: 60,
+    status: "payment_pending",
+  },
+];
+
+const INITIAL_NOTIFICATIONS = [
+  {
+    id: "note-1",
+    text: "Your print at QuickPrint Koramangala is ready for pickup.",
+    time: "10 min ago",
+  },
+];
+
+function ratePerPage(color) {
+  return color === "Color" ? 5 : 2;
+}
+
+export default function PrinterDashboard() {
+  const [shops] = useState(INITIAL_SHOPS);
+  const [jobs, setJobs] = useState(INITIAL_JOBS);
+  const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
+  const [showNewJobForm, setShowNewJobForm] = useState(false);
+  const [payingJobId, setPayingJobId] = useState(null);
+
+  const [newJob, setNewJob] = useState({
+    shopId: "",
+    fileName: "",
+    pages: 1,
+    color: "B/W",
+    orientation: "Portrait",
+    copies: 1,
+  });
+
+  const activeJobsCount = jobs.filter(
+    (j) => j.status !== "collected" && j.status !== "payment_failed"
+  ).length;
+  const readyCount = jobs.filter((j) => j.status === "ready").length;
+  const totalSpent = jobs
+    .filter((j) => j.status !== "payment_pending" && j.status !== "payment_failed")
+    .reduce((sum, j) => sum + j.amount, 0);
+
+  const openForOrder = (shop) => shop.status === "open" || shop.status === "scheduled";
+
+  const startNewJob = (shopId) => {
+    setNewJob({
+      shopId: shopId || "",
+      fileName: "",
+      pages: 1,
+      color: "B/W",
+      orientation: "Portrait",
+      copies: 1,
+    });
+    setShowNewJobForm(true);
+  };
+
+  const handleNewJobChange = (field) => (e) => {
+    setNewJob((prev) => ({ ...prev, [field]: e.target.value }));
+  };
+
+  const handleNewJobSubmit = (e) => {
+    e.preventDefault();
+    const shop = shops.find((s) => s.id === newJob.shopId);
+    if (!shop) return;
+
+    const pages = Number(newJob.pages) || 1;
+    const copies = Number(newJob.copies) || 1;
+    const amount = pages * copies * ratePerPage(newJob.color);
+
+    const job = {
+      id: `job-${Date.now()}`,
+      fileName: newJob.fileName || "untitled_document.pdf",
+      shopName: shop.name,
+      pages,
+      color: newJob.color,
+      copies,
+      orientation: newJob.orientation,
+      amount,
+      status: "payment_pending",
+    };
+
+    setJobs((prev) => [job, ...prev]);
+    setShowNewJobForm(false);
+  };
+
+  const handlePay = (jobId) => {
+    setPayingJobId(jobId);
+    window.setTimeout(() => {
+      setJobs((prev) =>
+        prev.map((j) => {
+          if (j.id !== jobId) return j;
+          const success = Math.random() > 0.15;
+          return success
+            ? { ...j, status: "printing" }
+            : { ...j, status: "payment_failed" };
+        })
+      );
+      setPayingJobId(null);
+
+      setJobs((prev) => {
+        const job = prev.find((j) => j.id === jobId);
+        if (job && job.status === "printing") {
+          window.setTimeout(() => {
+            setJobs((cur) =>
+              cur.map((j) =>
+                j.id === jobId
+                  ? { ...j, status: "ready", pickupTime: "Today, in ~30 mins" }
+                  : j
+              )
+            );
+            setNotifications((prev) => [
+              {
+                id: `note-${Date.now()}`,
+                text: `Your print "${job.fileName}" at ${job.shopName} is ready for pickup.`,
+                time: "just now",
+              },
+              ...prev,
+            ]);
+          }, 1800);
+        }
+        return prev;
+      });
+    }, 1400);
+  };
+
+  const handleCollect = (jobId) => {
+    setJobs((prev) =>
+      prev.map((j) => (j.id === jobId ? { ...j, status: "collected" } : j))
+    );
+  };
+
+  return (
+    <div className="dashboard-page">
+      <div className="dashboard-inner">
+        <header className="dashboard-header">
+          <div>
+            <h1>Your Print Dashboard</h1>
+            <p className="subtitle">Find a shop, send your file, track it to pickup.</p>
+          </div>
+          <div className="header-actions">
+            <div className="user-chip">
+              <span className="avatar">HS</span>
+              Havish S
+            </div>
+            <button className="btn-submit" onClick={() => startNewJob("")}>
+              + New Print Job
+            </button>
+          </div>
+        </header>
+
+        <section className="stats-row">
+          <div className="stat-card">
+            <div className="stat-value">{activeJobsCount}</div>
+            <div className="stat-label">Active jobs</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">{readyCount}</div>
+            <div className="stat-label">Ready for pickup</div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-value">₹{totalSpent}</div>
+            <div className="stat-label">Total spent</div>
+          </div>
+        </section>
+
+        {showNewJobForm && (
+          <section className="new-job-panel">
+            <div className="panel-header">
+              <h2>New Print Job</h2>
+              <button
+                className="btn-outline btn-small"
+                onClick={() => setShowNewJobForm(false)}
+              >
+                Cancel
+              </button>
+            </div>
+            <form onSubmit={handleNewJobSubmit}>
+              <div className="form-group">
+                <label htmlFor="shopId">Printer shop</label>
+                <select
+                  id="shopId"
+                  value={newJob.shopId}
+                  onChange={handleNewJobChange("shopId")}
+                  required
+                >
+                  <option value="" disabled>
+                    Choose a shop available for your print
+                  </option>
+                  {shops
+                    .filter(openForOrder)
+                    .map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.name} — {STATUS_LABEL[s.status]}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="fileName">File name</label>
+                <input
+                  id="fileName"
+                  type="text"
+                  placeholder="e.g. assignment_report.pdf"
+                  value={newJob.fileName}
+                  onChange={handleNewJobChange("fileName")}
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="pages">Pages</label>
+                  <input
+                    id="pages"
+                    type="number"
+                    min="1"
+                    value={newJob.pages}
+                    onChange={handleNewJobChange("pages")}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="copies">Copies</label>
+                  <input
+                    id="copies"
+                    type="number"
+                    min="1"
+                    value={newJob.copies}
+                    onChange={handleNewJobChange("copies")}
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="color">Color</label>
+                  <select
+                    id="color"
+                    value={newJob.color}
+                    onChange={handleNewJobChange("color")}
+                  >
+                    <option value="B/W">Black &amp; White</option>
+                    <option value="Color">Color</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="orientation">Orientation</label>
+                  <select
+                    id="orientation"
+                    value={newJob.orientation}
+                    onChange={handleNewJobChange("orientation")}
+                  >
+                    <option value="Portrait">Portrait</option>
+                    <option value="Landscape">Landscape</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-actions">
+                <button type="submit" className="btn-submit">
+                  Submit &amp; Continue to Payment
+                </button>
+              </div>
+              <p className="form-hint">
+                Shops marked "Scheduled only" will print at their set time rather
+                than immediately.
+              </p>
+            </form>
+          </section>
+        )}
+
+        <div className="dashboard-grid">
+          <div className="panel">
+            <div className="panel-header">
+              <h2>Nearby Printer Shops</h2>
+            </div>
+            <div className="shop-list">
+              {shops.map((shop) => (
+                <div className="shop-card" key={shop.id}>
+                  <div className="shop-info">
+                    <h3>{shop.name}</h3>
+                    <div className="shop-meta">
+                      {shop.distance}
+                      {shop.status === "scheduled" && shop.availableFrom
+                        ? ` · Next slot ${shop.availableFrom}`
+                        : ""}
+                    </div>
+                    <div className="shop-services">
+                      {shop.services.map((s) => (
+                        <span className="service-tag" key={s}>
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="shop-actions">
+                    <span className={`status-badge status-${shop.status}`}>
+                      {STATUS_LABEL[shop.status]}
+                    </span>
+                    <button
+                      className="btn-outline btn-small"
+                      disabled={!openForOrder(shop)}
+                      onClick={() => startNewJob(shop.id)}
+                    >
+                      Print here
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="panel">
+            <div className="panel-header">
+              <h2>My Print Jobs</h2>
+            </div>
+            <div className="order-list">
+              {jobs.length === 0 && (
+                <p className="empty-state">No print jobs yet.</p>
+              )}
+              {jobs.map((job) => (
+                <div className="order-card" key={job.id}>
+                  <div className="order-top">
+                    <div>
+                      <div className="order-file">{job.fileName}</div>
+                      <div className="order-shop">{job.shopName}</div>
+                    </div>
+                    <span className={`status-badge status-${job.status}`}>
+                      {JOB_STATUS_LABEL[job.status]}
+                    </span>
+                  </div>
+                  <div className="order-specs">
+                    {job.pages} pages · {job.color} · {job.copies}{" "}
+                    {job.copies > 1 ? "copies" : "copy"} · {job.orientation}
+                  </div>
+                  <div className="order-bottom">
+                    <div>
+                      <div className="order-amount">₹{job.amount}</div>
+                      {job.pickupTime && (
+                        <div className="order-pickup">Pickup: {job.pickupTime}</div>
+                      )}
+                    </div>
+
+                    {job.status === "payment_pending" && (
+                      <button
+                        className="btn-submit btn-small"
+                        disabled={payingJobId === job.id}
+                        onClick={() => handlePay(job.id)}
+                      >
+                        {payingJobId === job.id ? "Processing…" : "Pay Now"}
+                      </button>
+                    )}
+
+                    {job.status === "payment_failed" && (
+                      <button
+                        className="btn-outline btn-small"
+                        onClick={() => handlePay(job.id)}
+                      >
+                        Retry Payment
+                      </button>
+                    )}
+
+                    {job.status === "ready" && (
+                      <button
+                        className="btn-submit btn-small"
+                        onClick={() => handleCollect(job.id)}
+                      >
+                        Mark as Collected
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <div className="panel-header">
+            <h2>Notifications</h2>
+          </div>
+          <div className="notification-list">
+            {notifications.length === 0 && (
+              <p className="empty-state">You're all caught up.</p>
+            )}
+            {notifications.map((note) => (
+              <div className="notification-item" key={note.id}>
+                <span className="notification-dot" />
+                <div>
+                  <div className="notification-text">{note.text}</div>
+                  <div className="notification-time">{note.time}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

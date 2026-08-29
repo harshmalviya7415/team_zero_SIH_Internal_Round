@@ -101,10 +101,12 @@ export default function RegisterForm() {
           </button>
         </form>
 
-        <div className="login-link">
-          Already have an account? 
-          <a href="/login">Sign In</a>
-        </div>
+<div className="login-link">
+  Already have an account?{' '}
+  <button type="button" onClick={onSwitch} className="btn-toggle">
+    Sign In
+  </button>
+</div>
       </div>
     </div>
   );

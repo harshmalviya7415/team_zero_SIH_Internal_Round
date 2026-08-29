@@ -59,9 +59,12 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="register-link">
-          Don't have an account? <a href="/register">Sign up</a>
-        </div>
+<div className="register-link">
+  Don't have an account?{' '}
+  <button type="button" onClick={onSwitch} className="btn-toggle">
+    Sign Up
+  </button>
+</div>
       </div>
     </div>
   );

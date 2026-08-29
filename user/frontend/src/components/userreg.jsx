@@ -61,7 +61,7 @@ export default function RegisterForm({ onSwitch }) {
               name="fullname"
               value={formData.fullname}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Your Name"
             />
             {errors.fullname && <span className="error-text">{errors.fullname}</span>}
           </div>
@@ -74,7 +74,7 @@ export default function RegisterForm({ onSwitch }) {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="john@example.com"
+              placeholder="yourname@example.com"
             />
             {errors.email && <span className="error-text">{errors.email}</span>}
           </div>

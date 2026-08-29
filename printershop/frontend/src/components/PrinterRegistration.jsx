@@ -51,7 +51,7 @@ export default function RegisterForm({ onSwitch }) {
               name="fullname"
               value={formData.fullname}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Your Name"
               required
             />
           </div>

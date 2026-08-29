@@ -1,0 +1,271 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+
+/* Dashboard Layout */
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #D3C9C1; 
+  font-family: 'Inter', sans-serif;
+  padding: 2.5rem 2rem;
+  color: #333333;
+}
+
+.dashboard-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+}
+
+.dashboard-header h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: #111111;
+  margin: 0 0 0.5rem 0;
+}
+
+.dashboard-header p {
+  color: #555555;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+/* KPI Cards Section */
+.kpi-grid {
+  max-width: 1200px;
+  margin: 0 auto 2rem auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.5rem;
+}
+
+.kpi-card {
+  background: #ffffff;
+  padding: 1.75rem 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  border-left: 5px solid #A38C82;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.kpi-card.yellow { border-left-color: #D97706; }
+.kpi-card.green { border-left-color: #059669; }
+.kpi-card.blue { border-left-color: #634E45; }
+
+.kpi-card h3 {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #555555;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.75rem 0;
+}
+
+.kpi-value {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #111111;
+}
+
+/* Main Content Wrapper */
+.dashboard-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+}
+
+/* Controls Header */
+.table-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.table-controls label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #444444;
+}
+
+.table-controls select {
+  padding: 0.5rem 2.25rem 0.5rem 0.85rem;
+  background-color: #ffffff;
+  border: 1px solid #E2E2E2;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: #333333;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23999999%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 0.55rem auto;
+  transition: all 0.2s ease;
+}
+
+.table-controls select:focus {
+  border-color: #A38C82;
+  box-shadow: 0 0 0 3px rgba(163, 140, 130, 0.15);
+}
+
+/* Table Styling */
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.orders-table th {
+  background-color: #F8F6F4;
+  color: #444444;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.85rem 1rem;
+  border-bottom: 2px solid #E2E2E2;
+}
+
+.orders-table td {
+  padding: 1.2rem 1rem;
+  border-bottom: 1px solid #E2E2E2;
+  vertical-align: top;
+  font-size: 0.9rem;
+}
+
+.sub-text {
+  font-size: 0.8rem;
+  color: #666666;
+  margin-top: 0.2rem;
+}
+
+.doc-link {
+  color: #634E45;
+  font-weight: 600;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.doc-link:hover {
+  color: #4A3A33;
+  text-decoration: underline;
+}
+
+.specs-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.825rem;
+  line-height: 1.6;
+  color: #555555;
+}
+
+.specs-list strong {
+  color: #333333;
+}
+
+/* Status Badges */
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.badge-queued {
+  background-color: #FEF3C7;
+  color: #92400E;
+}
+
+.badge-printing {
+  background-color: #DBEAFE;
+  color: #1E40AF;
+}
+
+.badge-ready-for-collection {
+  background-color: #D1FAE5;
+  color: #065F46;
+}
+
+.badge-completed {
+  background-color: #E5E7EB;
+  color: #374151;
+}
+
+.badge-cancelled {
+  background-color: #FEE2E2;
+  color: #991B1B;
+}
+
+.action-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.btn-action {
+  padding: 0.4rem 1rem;
+  border: none;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  white-space: nowrap;
+}
+
+.btn-print {
+  background-color: #634E45;
+  color: #ffffff;
+}
+
+.btn-print:hover {
+  background-color: #4A3A33;
+}
+
+.btn-ready {
+  background-color: #059669;
+  color: #ffffff;
+}
+
+.btn-ready:hover {
+  background-color: #047857;
+}
+
+.btn-complete {
+  background-color: #555555;
+  color: #ffffff;
+}
+
+.btn-complete:hover {
+  background-color: #333333;
+}
+
+.btn-cancel {
+  background-color: transparent;
+  color: #991B1B;
+  border: 1px solid #FCA5A5;
+}
+
+.btn-cancel:hover {
+  background-color: #FEE2E2;
+}
+
+.no-data {
+  text-align: center;
+  padding: 2.5rem;
+  color: #777777;
+  font-style: italic;
+}

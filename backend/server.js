@@ -18,8 +18,13 @@ app.use(
   }),
 );
 
+const { auth } = require("./config/auth");
 const { usercreat } = require("./controller/usercreate");
+const { userlogin } = require("./controller/userlogin");
 const { printercreat } = require("./controller/printercreate");
+const { printerlogin } = require("./controller/printerlogin");
+const { jobcreat } = require("./controller/jobcreate");
+const { statusupdate } = require("./controller/statusupdate");
 
 const PORT = process.env.PORT || 1500;
 
@@ -28,7 +33,11 @@ app.get("/", (req, res) => {
 });
 
 app.post("/api/user/create", usercreat);
+app.post("/api/user/login", userlogin);
 app.post("/api/printer/create", printercreat);
+app.post("/api/printer/login", printerlogin);
+app.post("/api/job/create", auth, jobcreat);
+app.post("/api/printer/status", auth, statusupdate);
 
 app.listen(PORT, async () => {
   await connectDb();

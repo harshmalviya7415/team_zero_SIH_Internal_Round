@@ -1,4 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { io } from "socket.io-client";
 import "./PrinterDashboard.css";
 
 const INITIAL_ORDERS = [
@@ -59,8 +62,105 @@ const INITIAL_ORDERS = [
 ];
 
 export default function PrinterDashboard() {
+  const navigate = useNavigate();
+  const [printer, setPrinter] = useState(null);
   const [orders, setOrders] = useState(INITIAL_ORDERS);
   const [filter, setFilter] = useState("All");
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get("http://localhost:1500/api/printer/verify", {
+          withCredentials: true
+        });
+        setPrinter(response.data);
+      } catch (error) {
+        console.error("Auth verification failed:", error);
+        localStorage.removeItem("printer");
+        navigate("/login");
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  useEffect(() => {
+    if (!printer) return;
+
+    const socket = io("http://localhost:1500");
+
+    socket.on("connect", () => {
+      console.log("Connected to socket server");
+      socket.emit("join_printer_room", printer._id);
+      console.log(`Joined room: printer_${printer._id}`);
+    });
+
+    socket.on("new_print_job", (job) => {
+      console.log("Received new print job:", job);
+      const mappedJob = {
+        id: job._id,
+        customer: { name: "Web Customer", phone: "N/A" },
+        documentName: job.urlofprinddocument.split("/").pop(),
+        documentUrl: job.urlofprinddocument,
+        specs: {
+          color: job.printcolor,
+          orientation: "Portrait",
+          pages: parseInt(job.printpagenos.split("-")[1]) || 1,
+          copies: job.printcopies,
+          paperSize: job.printpapersize,
+          paperType: "75 GSM Standard",
+          sides: "Single-sided"
+        },
+        status: job.printstatus === "Pending" ? "Queued" : job.printstatus,
+        placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        completedAt: null
+      };
+
+      setOrders((prev) => [mappedJob, ...prev]);
+    });
+
+    return () => {
+      socket.disconnect();
+    };
+  }, [printer]);
+
+  useEffect(() => {
+    if (!printer) return;
+
+    const fetchOrders = async () => {
+      try {
+        const response = await axios.get("http://localhost:1500/api/job/printer", {
+          withCredentials: true
+        });
+
+        const mapped = response.data.map(job => ({
+          id: job._id,
+          customer: { 
+            name: job.userid ? job.userid.fullname : "Web Customer", 
+            phone: job.userid ? job.userid.mobile : "N/A" 
+          },
+          documentName: job.urlofprinddocument.split("/").pop(),
+          documentUrl: job.urlofprinddocument,
+          specs: {
+            color: job.printcolor,
+            orientation: "Portrait",
+            pages: parseInt(job.printpagenos.split("-")[1]) || 1,
+            copies: job.printcopies,
+            paperSize: job.printpapersize,
+            paperType: "75 GSM Standard",
+            sides: "Single-sided"
+          },
+          status: job.printstatus === "Pending" ? "Queued" : job.printstatus,
+          placedAt: new Date(job.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          completedAt: null
+        }));
+
+        setOrders(mapped);
+      } catch (error) {
+        console.error("Error fetching printer orders:", error);
+      }
+    };
+    fetchOrders();
+  }, [printer]);
 
   // Status transition handlers
   const updateStatus = (orderId, newStatus) => {

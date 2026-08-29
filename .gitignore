@@ -3,3 +3,4 @@ dist
 .env
 test-isolation.js
 test-socket.js
+seed-printers.js

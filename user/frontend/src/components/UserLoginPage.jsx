@@ -29,7 +29,8 @@ const Login = () => {
         alert(response.data.mess);
       } else {
         alert('Login Successful!');
-        console.log('Logged in user:', response.data);
+        localStorage.setItem("user", JSON.stringify(response.data));
+        navigate('/dashboard');
       }
     } catch (error) {
       console.error('Login error:', error);

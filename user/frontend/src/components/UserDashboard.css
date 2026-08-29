@@ -199,11 +199,31 @@ html, body {
   margin: 0;
 }
 
-/* ---------- shop list ---------- */
 .shop-list {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.shop-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.shop-list::-webkit-scrollbar-track {
+  background: #FAF7F5;
+  border-radius: 10px;
+}
+
+.shop-list::-webkit-scrollbar-thumb {
+  background: #A38C82;
+  border-radius: 10px;
+}
+
+.shop-list::-webkit-scrollbar-thumb:hover {
+  background: #634E45;
 }
 
 .shop-card {
@@ -306,11 +326,31 @@ html, body {
   color: #999999;
 }
 
-/* ---------- order / job cards ---------- */
 .order-list {
   display: flex;
   flex-direction: column;
   gap: 0.9rem;
+  max-height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.order-list::-webkit-scrollbar {
+  width: 6px;
+}
+
+.order-list::-webkit-scrollbar-track {
+  background: #FAF7F5;
+  border-radius: 10px;
+}
+
+.order-list::-webkit-scrollbar-thumb {
+  background: #A38C82;
+  border-radius: 10px;
+}
+
+.order-list::-webkit-scrollbar-thumb:hover {
+  background: #634E45;
 }
 
 .order-card {

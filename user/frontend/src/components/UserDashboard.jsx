@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./UserDashboard.css";
 
 
@@ -88,19 +90,86 @@ function ratePerPage(color) {
 }
 
 export default function UserDashboard() {
-  const [shops] = useState(INITIAL_SHOPS);
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
+  const [shops, setShops] = useState([]);
   const [jobs, setJobs] = useState(INITIAL_JOBS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [showNewJobForm, setShowNewJobForm] = useState(false);
   const [payingJobId, setPayingJobId] = useState(null);
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const response = await axios.get("http://localhost:1500/api/user/verify", {
+          withCredentials: true
+        });
+        setUser(response.data);
+      } catch (error) {
+        console.error("Auth verification failed:", error);
+        localStorage.removeItem("user");
+        navigate("/login");
+      }
+    };
+    checkAuth();
+  }, [navigate]);
+
+  useEffect(() => {
+    const fetchShops = async () => {
+      try {
+        const response = await axios.get("http://localhost:1500/api/printer/list");
+        const mapped = response.data.map(p => ({
+          id: p._id,
+          name: p.shopname || p.fullname,
+          distance: "0.5 km away",
+          status: "open",
+          services: [p.services || "B/W"],
+          pagesizes: p.pagesizes || "A4",
+        }));
+        setShops(mapped);
+      } catch (error) {
+        console.error("Error fetching shops:", error);
+      }
+    };
+    fetchShops();
+  }, []);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const fetchJobs = async () => {
+      try {
+        const response = await axios.get("http://localhost:1500/api/job/user", {
+          withCredentials: true
+        });
+        
+        const mapped = response.data.map(j => ({
+          id: j._id,
+          fileName: j.urlofprinddocument.split("/").pop(),
+          shopName: j.printershopid ? (j.printershopid.shopname || j.printershopid.fullname) : "Unknown Shop",
+          pages: parseInt(j.printpagenos.split("-")[1]) || 1,
+          color: j.printcolor === "Colour" ? "Color" : "B/W",
+          copies: j.printcopies,
+          orientation: "Portrait",
+          amount: j.printcopies * (parseInt(j.printpagenos.split("-")[1]) || 1) * (j.printcolor === "Colour" ? 5 : 2),
+          status: j.printstatus === "Pending" ? "payment_pending" : j.printstatus,
+        }));
+        setJobs(mapped);
+      } catch (error) {
+        console.error("Error fetching jobs:", error);
+      }
+    };
+    fetchJobs();
+  }, [user]);
+
   const [newJob, setNewJob] = useState({
     shopId: "",
-    fileName: "",
+    urlofprinddocument: "",
     pages: 1,
     color: "B/W",
     orientation: "Portrait",
     copies: 1,
+    printpapersize: "A4",
   });
 
   const activeJobsCount = jobs.filter(
@@ -116,11 +185,12 @@ export default function UserDashboard() {
   const startNewJob = (shopId) => {
     setNewJob({
       shopId: shopId || "",
-      fileName: "",
+      urlofprinddocument: "",
       pages: 1,
       color: "B/W",
       orientation: "Portrait",
       copies: 1,
+      printpapersize: "A4",
     });
     setShowNewJobForm(true);
   };
@@ -129,7 +199,7 @@ export default function UserDashboard() {
     setNewJob((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  const handleNewJobSubmit = (e) => {
+  const handleNewJobSubmit = async (e) => {
     e.preventDefault();
     const shop = shops.find((s) => s.id === newJob.shopId);
     if (!shop) return;
@@ -138,20 +208,42 @@ export default function UserDashboard() {
     const copies = Number(newJob.copies) || 1;
     const amount = pages * copies * ratePerPage(newJob.color);
 
-    const job = {
-      id: `job-${Date.now()}`,
-      fileName: newJob.fileName || "untitled_document.pdf",
-      shopName: shop.name,
-      pages,
-      color: newJob.color,
-      copies,
-      orientation: newJob.orientation,
-      amount,
-      status: "payment_pending",
+    const payload = {
+      printershopid: newJob.shopId,
+      urlofprinddocument: newJob.urlofprinddocument,
+      printcopies: copies,
+      printpagenos: `1-${pages}`,
+      printpapersize: newJob.printpapersize || "A4",
+      printcolor: newJob.color === "Color" ? "Colour" : "Black and White"
     };
 
-    setJobs((prev) => [job, ...prev]);
-    setShowNewJobForm(false);
+    try {
+      const response = await axios.post("http://localhost:1500/api/job/create", payload, {
+        withCredentials: true
+      });
+
+      if (response.data.mess) {
+        alert(response.data.mess);
+      } else {
+        alert("Print Job Created Successfully!");
+        const addedJob = {
+          id: response.data._id,
+          fileName: response.data.urlofprinddocument.split("/").pop() || "untitled_document.pdf",
+          shopName: shop.name,
+          pages,
+          color: newJob.color,
+          copies,
+          orientation: newJob.orientation,
+          amount,
+          status: "payment_pending",
+        };
+        setJobs((prev) => [addedJob, ...prev]);
+        setShowNewJobForm(false);
+      }
+    } catch (error) {
+      console.error("Error submitting job:", error);
+      alert("Failed to submit print job. Please login again.");
+    }
   };
 
   const handlePay = (jobId) => {
@@ -210,8 +302,10 @@ export default function UserDashboard() {
           </div>
           <div className="header-actions">
             <div className="user-chip">
-              <span className="avatar">HS</span>
-              Havish S
+              <span className="avatar">
+                {user ? user.fullname.split(" ").map(n => n[0]).join("").toUpperCase() : "U"}
+              </span>
+              {user ? user.fullname : "User"}
             </div>
             <button className="btn-submit" onClick={() => startNewJob("")}>
               + New Print Job
@@ -268,13 +362,14 @@ export default function UserDashboard() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="fileName">File name</label>
+                <label htmlFor="urlofprinddocument">Document URL</label>
                 <input
-                  id="fileName"
-                  type="text"
-                  placeholder="e.g. assignment_report.pdf"
-                  value={newJob.fileName}
-                  onChange={handleNewJobChange("fileName")}
+                  id="urlofprinddocument"
+                  type="url"
+                  placeholder="e.g. https://example.com/docs/report.pdf"
+                  value={newJob.urlofprinddocument}
+                  onChange={handleNewJobChange("urlofprinddocument")}
+                  required
                 />
               </div>
 
@@ -319,6 +414,20 @@ export default function UserDashboard() {
                   >
                     <option value="Portrait">Portrait</option>
                     <option value="Landscape">Landscape</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label htmlFor="printpapersize">Paper Size</label>
+                  <select
+                    id="printpapersize"
+                    value={newJob.printpapersize}
+                    onChange={handleNewJobChange("printpapersize")}
+                  >
+                    <option value="A4">A4</option>
+                    <option value="A3">A3</option>
+                    <option value="A2">A2</option>
+                    <option value="A1">A1</option>
+                    <option value="A0">A0</option>
                   </select>
                 </div>
               </div>

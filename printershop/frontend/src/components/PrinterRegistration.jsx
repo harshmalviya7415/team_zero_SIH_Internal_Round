@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './PrinterRegistration.css';
 
 export default function RegisterForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullname: '',
     shopname: '',
@@ -22,9 +24,33 @@ export default function RegisterForm() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Registration Submitted:', formData);
+    try {
+      const response = await axios.post("http://localhost:1500/api/printer/create", formData, {
+        withCredentials: true
+      });
+
+      if (response.data.mess) {
+        alert(response.data.mess);
+      } else {
+        alert("Registration Successful!");
+        setFormData({
+          fullname: '',
+          shopname: '',
+          email: '',
+          mobile: '',
+          college: '',
+          services: '',
+          pagesizes: '',
+          password: ''
+        });
+        navigate("/login");
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      alert("An error occurred during registration. Please try again.");
+    }
   };
 
   return (

@@ -1,15 +1,14 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import "./PrinterLoginPage.css";
 
-// Accept the onSwitch prop here
-export default function LoginPage({ onSwitch }) {
+export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Signing in:", { email, password });
-    // Add your login API call here
   };
 
   return (
@@ -35,8 +34,8 @@ export default function LoginPage({ onSwitch }) {
           <div className="form-group">
             <label htmlFor="password">Password</label>
             <input
-              id="password"
               type="password"
+              id="password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -51,14 +50,8 @@ export default function LoginPage({ onSwitch }) {
         </form>
 
         <p className="login-link">
-          Don't have an account?{" "}
-          {/* Trigger onSwitch when clicked */}
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            onSwitch();
-          }}>
-            Create one
-          </a>
+          Don't have an account?{' '}
+          <Link to="/signup">Create one</Link>
         </p>
       </div>
     </div>

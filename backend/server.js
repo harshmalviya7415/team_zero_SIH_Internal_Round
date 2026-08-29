@@ -13,7 +13,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   }),
 );
@@ -25,6 +25,8 @@ const { printercreat } = require("./controller/printercreate");
 const { printerlogin } = require("./controller/printerlogin");
 const { jobcreat } = require("./controller/jobcreate");
 const { statusupdate } = require("./controller/statusupdate");
+
+const { initSocket } = require("./config/socket");
 
 const PORT = process.env.PORT || 1500;
 
@@ -39,7 +41,9 @@ app.post("/api/printer/login", printerlogin);
 app.post("/api/job/create", auth, jobcreat);
 app.post("/api/printer/status", auth, statusupdate);
 
-app.listen(PORT, async () => {
+const server = app.listen(PORT, async () => {
   await connectDb();
   console.log(`Server Started::: ${PORT}`);
 });
+
+initSocket(server);

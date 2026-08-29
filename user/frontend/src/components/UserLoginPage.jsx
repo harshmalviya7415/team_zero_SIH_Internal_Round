@@ -1,7 +1,10 @@
-import  { useState } from 'react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './UserLoginPage.css';
 
-const Login = ({ onSwitch }) => {
+const Login = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -15,9 +18,23 @@ const Login = ({ onSwitch }) => {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login attempt with:', formData);
+    try {
+      const response = await axios.post('http://localhost:1500/api/user/login', formData, {
+        withCredentials: true
+      });
+
+      if (response.data.mess) {
+        alert(response.data.mess);
+      } else {
+        alert('Login Successful!');
+        console.log('Logged in user:', response.data);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('An error occurred during login. Please try again.');
+    }
   };
 
   return (
@@ -62,12 +79,9 @@ const Login = ({ onSwitch }) => {
 
         <div className="register-link">
           Don't have an account?{' '}
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            onSwitch();
-          }}>
-            Sign up
-          </a>
+          <Link to="/signup" className="btn-toggle">
+            Sign Up
+          </Link>
         </div>
       </div>
     </div>

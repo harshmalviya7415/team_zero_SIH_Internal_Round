@@ -1,8 +1,8 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import './PrinterRegistration.css';
 
-export default function RegisterForm({ onSwitch }) {
-  // State keys now perfectly match your Mongoose Schema
+export default function RegisterForm() {
   const [formData, setFormData] = useState({
     fullname: '',
     shopname: '',
@@ -24,15 +24,7 @@ export default function RegisterForm({ onSwitch }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    // Mongoose expects 'mobile' to be a Number, so we can cast it here before sending
-    const dataToSend = {
-      ...formData,
-      mobile: Number(formData.mobile) 
-    };
-
-    console.log('Registration Data matching Mongoose:', dataToSend);
-    // Add your API integration here (e.g., fetch or axios call)
+    console.log('Registration Submitted:', formData);
   };
 
   return (
@@ -118,7 +110,6 @@ export default function RegisterForm({ onSwitch }) {
               required
             >
               <option value="" disabled>Select a service type</option>
-              {/* Values must match the Mongoose enum exactly */}
               <option value="Black and White">Black and White</option>
               <option value="Colour">Colour</option>
             </select>
@@ -134,7 +125,6 @@ export default function RegisterForm({ onSwitch }) {
               required
             >
               <option value="" disabled>Select max page size</option>
-              {/* Values must match the Mongoose enum exactly */}
               <option value="A4">A4</option>
               <option value="A3">A3</option>
               <option value="A2">A2</option>
@@ -160,13 +150,7 @@ export default function RegisterForm({ onSwitch }) {
         </form>
 
         <div className="login-link">
-          Already have an account? 
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            onSwitch();
-          }}>
-             Log in
-          </a>
+          Already have an account? <Link to="/login">Log in</Link>
         </div>
       </div>
     </div>

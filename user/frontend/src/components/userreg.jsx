@@ -1,11 +1,14 @@
-import  { useState } from 'react';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './userreg.css';
 
-export default function RegisterForm({ onSwitch }) {
+export default function RegisterForm() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     fullname: '',
-    email: '',
     mobile: '',
+    email: '',
     college: '',
     password: '',
   });
@@ -29,19 +32,26 @@ export default function RegisterForm({ onSwitch }) {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      const dataToSend = {
-        ...formData,
-        mobile: Number(formData.mobile) 
-      };
+      try {
+        const response = await axios.post('http://localhost:1500/api/user/create', formData, {
+          withCredentials: true
+        });
 
-      console.log('User Registered:', dataToSend);
-      alert('Registration Successful!');
-      
-      setFormData({ fullname: '', email: '', mobile: '', college: '', password: '' });
-      setErrors({});
+        if (response.data.mess) {
+          alert(response.data.mess);
+        } else {
+          alert('Registration Successful!');
+          setFormData({ fullname: '', mobile: '', email: '', college: '', password: '' });
+          setErrors({});
+          navigate('/login');
+        }
+      } catch (error) {
+        console.error('Registration error:', error);
+        alert('An error occurred during registration. Please try again.');
+      }
     }
   };
 
@@ -52,7 +62,6 @@ export default function RegisterForm({ onSwitch }) {
         <p>Please enter your details to register.</p>
 
         <form onSubmit={handleSubmit}>
-          
           <div className="form-group">
             <label htmlFor="fullname">Full Name</label>
             <input
@@ -93,14 +102,14 @@ export default function RegisterForm({ onSwitch }) {
           </div>
 
           <div className="form-group">
-            <label htmlFor="college">College</label>
+            <label htmlFor="college">College Name</label>
             <input
               id="college"
               type="text"
               name="college"
               value={formData.college}
               onChange={handleChange}
-              placeholder="Enter your college name"
+              placeholder="Your College Name"
             />
             {errors.college && <span className="error-text">{errors.college}</span>}
           </div>
@@ -125,12 +134,9 @@ export default function RegisterForm({ onSwitch }) {
 
         <div className="login-link">
           Already have an account?{' '}
-          <a href="#" onClick={(e) => {
-            e.preventDefault();
-            onSwitch();
-          }}>
+          <Link to="/login" className="btn-toggle">
             Sign In
-          </a>
+          </Link>
         </div>
       </div>
     </div>

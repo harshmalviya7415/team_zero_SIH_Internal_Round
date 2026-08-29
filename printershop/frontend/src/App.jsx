@@ -1,27 +1,19 @@
-import { useState } from "react";
+import React from "react";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import RegisterForm from "./components/PrinterRegistration.jsx";
-import LoginPage from "./components/PrinterLoginPage.jsx"; 
-
+import LoginPage from "./components/PrinterLoginPage.jsx";
+import PrinterDashboard from "./components/PrinterDashboard.jsx";
 
 function App() {
-  // Set to 'true' to show Login first, or 'false' to show Register first
-  const [showLogin, setShowLogin] = useState(true);
-
-  // This function flips the state back and forth
-  const toggleView = () => {
-    setShowLogin(!showLogin);
-  };
-
   return (
-    <main>
-      {/* Conditionally render based on the showLogin state */}
-      {showLogin ? (
-        <LoginPage onSwitch={toggleView} />
-      ) : (
-        <RegisterForm onSwitch={toggleView} />
-      )}
-      
-    </main>
+    <Router>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/signup" element={<RegisterForm />} />
+        <Route path="/dashboard" element={<PrinterDashboard />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </Router>
   );
 }
 

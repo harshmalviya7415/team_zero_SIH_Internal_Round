@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import './RegisterForm.css'; // Connects to the CSS file below
+import  { useState } from 'react';
+import './userreg.css';
 
-export default function RegisterForm() {
+export default function RegisterForm({ onSwitch }) {
   const [formData, setFormData] = useState({
-    name: '',
-    mobile: '',
+    fullname: '',
     email: '',
+    mobile: '',
+    college: '',
     password: '',
   });
 
@@ -18,9 +19,10 @@ export default function RegisterForm() {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Name is required';
+    if (!formData.fullname.trim()) newErrors.fullname = 'Full Name is required';
     if (!/^\d{10}$/.test(formData.mobile)) newErrors.mobile = 'Enter a valid 10-digit mobile number';
     if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Enter a valid email address';
+    if (!formData.college.trim()) newErrors.college = 'College is required';
     if (formData.password.length < 6) newErrors.password = 'Password must be at least 6 characters';
     
     setErrors(newErrors);
@@ -30,9 +32,15 @@ export default function RegisterForm() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validate()) {
-      console.log('User Registered:', formData);
+      const dataToSend = {
+        ...formData,
+        mobile: Number(formData.mobile) 
+      };
+
+      console.log('User Registered:', dataToSend);
       alert('Registration Successful!');
-      setFormData({ name: '', mobile: '', email: '', password: '' });
+      
+      setFormData({ fullname: '', email: '', mobile: '', college: '', password: '' });
       setErrors({});
     }
   };
@@ -44,17 +52,31 @@ export default function RegisterForm() {
         <p>Please enter your details to register.</p>
 
         <form onSubmit={handleSubmit}>
+          
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+            <label htmlFor="fullname">Full Name</label>
             <input
-              id="name"
+              id="fullname"
               type="text"
-              name="name"
-              value={formData.name}
+              name="fullname"
+              value={formData.fullname}
               onChange={handleChange}
               placeholder="John Doe"
             />
-            {errors.name && <span className="error-text">{errors.name}</span>}
+            {errors.fullname && <span className="error-text">{errors.fullname}</span>}
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="email">Email ID</label>
+            <input
+              id="email"
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="john@example.com"
+            />
+            {errors.email && <span className="error-text">{errors.email}</span>}
           </div>
 
           <div className="form-group">
@@ -71,16 +93,16 @@ export default function RegisterForm() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="email">Email ID</label>
+            <label htmlFor="college">College</label>
             <input
-              id="email"
-              type="email"
-              name="email"
-              value={formData.email}
+              id="college"
+              type="text"
+              name="college"
+              value={formData.college}
               onChange={handleChange}
-              placeholder="john@example.com"
+              placeholder="Enter your college name"
             />
-            {errors.email && <span className="error-text">{errors.email}</span>}
+            {errors.college && <span className="error-text">{errors.college}</span>}
           </div>
 
           <div className="form-group">
@@ -102,8 +124,13 @@ export default function RegisterForm() {
         </form>
 
         <div className="login-link">
-          Already have an account? 
-          <a href="/login">Sign In</a>
+          Already have an account?{' '}
+          <a href="#" onClick={(e) => {
+            e.preventDefault();
+            onSwitch();
+          }}>
+            Sign In
+          </a>
         </div>
       </div>
     </div>

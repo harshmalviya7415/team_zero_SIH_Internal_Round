@@ -1,5 +1,5 @@
 import { useState } from "react";
-import "./PrinterDashboard.css";
+import "./UserDashboard.css";
 
 
 const STATUS_LABEL = {
@@ -87,7 +87,7 @@ function ratePerPage(color) {
   return color === "Color" ? 5 : 2;
 }
 
-export default function PrinterDashboard() {
+export default function UserDashboard() {
   const [shops] = useState(INITIAL_SHOPS);
   const [jobs, setJobs] = useState(INITIAL_JOBS);
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);

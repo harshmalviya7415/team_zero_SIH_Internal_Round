@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import './UserLoginPage.css';
 
-const Login = () => {
+const Login = ({ onSwitch }) => {
   const [formData, setFormData] = useState({
     email: '',
     password: ''
@@ -17,7 +17,6 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Add your login authentication logic here
     console.log('Login attempt with:', formData);
   };
 
@@ -37,6 +36,7 @@ const Login = () => {
               placeholder="name@example.com"
               value={formData.email}
               onChange={handleChange}
+              autoComplete="email"
               required
             />
           </div>
@@ -50,6 +50,7 @@ const Login = () => {
               placeholder="Enter your password"
               value={formData.password}
               onChange={handleChange}
+              autoComplete="current-password"
               required
             />
           </div>
@@ -60,7 +61,13 @@ const Login = () => {
         </form>
 
         <div className="register-link">
-          Don't have an account? <a href="/register">Sign up</a>
+          Don't have an account?{' '}
+          <a href="#" onClick={(e) => {
+            e.preventDefault();
+            onSwitch();
+          }}>
+            Sign up
+          </a>
         </div>
       </div>
     </div>

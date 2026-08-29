@@ -1,14 +1,17 @@
-import  { useState } from 'react';
+import { useState } from 'react';
 import './PrinterRegistration.css';
 
-export default function RegisterForm() {
+export default function RegisterForm({ onSwitch }) {
+  // State keys now perfectly match your Mongoose Schema
   const [formData, setFormData] = useState({
-    name: '',
-    shopName: '',
+    fullname: '',
+    shopname: '',
     email: '',
     mobile: '',
-    password: '',
-    specs: ''
+    college: '',
+    services: '',
+    pagesizes: '',
+    password: ''
   });
 
   const handleChange = (e) => {
@@ -21,7 +24,14 @@ export default function RegisterForm() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log('Registration Submitted:', formData);
+    
+    // Mongoose expects 'mobile' to be a Number, so we can cast it here before sending
+    const dataToSend = {
+      ...formData,
+      mobile: Number(formData.mobile) 
+    };
+
+    console.log('Registration Data matching Mongoose:', dataToSend);
     // Add your API integration here (e.g., fetch or axios call)
   };
 
@@ -32,13 +42,14 @@ export default function RegisterForm() {
         <p>Fill in the details below to register your shop.</p>
 
         <form onSubmit={handleSubmit}>
+          
           <div className="form-group">
-            <label htmlFor="name">Full Name</label>
+            <label htmlFor="fullname">Full Name</label>
             <input
               type="text"
-              id="name"
-              name="name"
-              value={formData.name}
+              id="fullname"
+              name="fullname"
+              value={formData.fullname}
               onChange={handleChange}
               placeholder="John Doe"
               required
@@ -46,12 +57,12 @@ export default function RegisterForm() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="shopName">Shop Name</label>
+            <label htmlFor="shopname">Shop Name</label>
             <input
               type="text"
-              id="shopName"
-              name="shopName"
-              value={formData.shopName}
+              id="shopname"
+              name="shopname"
+              value={formData.shopname}
               onChange={handleChange}
               placeholder="Print Hub"
               required
@@ -79,9 +90,57 @@ export default function RegisterForm() {
               name="mobile"
               value={formData.mobile}
               onChange={handleChange}
-              placeholder="+1234567890"
+              placeholder="1234567890"
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="college">College</label>
+            <input
+              type="text"
+              id="college"
+              name="college"
+              value={formData.college}
+              onChange={handleChange}
+              placeholder="Enter your college name"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="services">Services Provided</label>
+            <select
+              id="services"
+              name="services"
+              value={formData.services}
+              onChange={handleChange}
+              required
+            >
+              <option value="" disabled>Select a service type</option>
+              {/* Values must match the Mongoose enum exactly */}
+              <option value="Black and White">Black and White</option>
+              <option value="Colour">Colour</option>
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="pagesizes">Supported Page Sizes</label>
+            <select
+              id="pagesizes"
+              name="pagesizes"
+              value={formData.pagesizes}
+              onChange={handleChange}
+              required
+            >
+              <option value="" disabled>Select max page size</option>
+              {/* Values must match the Mongoose enum exactly */}
+              <option value="A4">A4</option>
+              <option value="A3">A3</option>
+              <option value="A2">A2</option>
+              <option value="A1">A1</option>
+              <option value="A0">A0</option>
+            </select>
           </div>
 
           <div className="form-group">
@@ -97,29 +156,17 @@ export default function RegisterForm() {
             />
           </div>
 
-          <div className="form-group">
-            <label htmlFor="specs">Specs</label>
-            <select
-              id="specs"
-              name="specs"
-              value={formData.specs}
-              onChange={handleChange}
-              required
-            >
-              <option value="" disabled>Select hardware specification</option>
-              <option value="bw-with-scanner">Black and white-only with scanner</option>
-              <option value="color-with-scanner">Color with scanner</option>
-              <option value="bw-without-scanner">B&W without scanner</option>
-              <option value="color-without-scanner">Color without scanner</option>
-              <option value="scanner-only">Scanner only</option>
-            </select>
-          </div>
-
           <button type="submit" className="btn-submit">Register</button>
         </form>
 
         <div className="login-link">
-          Already have an account? <a href="/login">Log in</a>
+          Already have an account? 
+          <a href="#" onClick={(e) => {
+            e.preventDefault();
+            onSwitch();
+          }}>
+             Log in
+          </a>
         </div>
       </div>
     </div>

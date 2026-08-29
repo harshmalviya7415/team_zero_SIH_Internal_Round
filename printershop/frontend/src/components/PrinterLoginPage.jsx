@@ -1,13 +1,15 @@
 import { useState } from "react";
 import "./PrinterLoginPage.css";
 
-export default function LoginPage() {
-  const [username, setUsername] = useState("");
+// Accept the onSwitch prop here
+export default function LoginPage({ onSwitch }) {
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Signing in:", { username, password });
+    console.log("Signing in:", { email, password });
+    // Add your login API call here
   };
 
   return (
@@ -18,14 +20,14 @@ export default function LoginPage() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="username">Username</label>
+            <label htmlFor="email">Email Address</label>
             <input
-              id="username"
-              type="text"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              autoComplete="username"
+              id="email"
+              type="email"
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
               required
             />
           </div>
@@ -49,8 +51,14 @@ export default function LoginPage() {
         </form>
 
         <p className="login-link">
-          Don't have an account?
-          <a href="#">Create one</a>
+          Don't have an account?{" "}
+          {/* Trigger onSwitch when clicked */}
+          <a href="#" onClick={(e) => {
+            e.preventDefault();
+            onSwitch();
+          }}>
+            Create one
+          </a>
         </p>
       </div>
     </div>

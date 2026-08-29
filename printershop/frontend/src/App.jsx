@@ -1,7 +1,7 @@
 import { useState } from "react";
 import RegisterForm from "./components/PrinterRegistration.jsx";
 import LoginPage from "./components/PrinterLoginPage.jsx"; 
-import PrinterDashboard from "./components/PrinterDashboard.jsx";
+
 
 function App() {
   // Set to 'true' to show Login first, or 'false' to show Register first
@@ -20,7 +20,7 @@ function App() {
       ) : (
         <RegisterForm onSwitch={toggleView} />
       )}
-      <PrinterDashboard/>
+      
     </main>
   );
 }

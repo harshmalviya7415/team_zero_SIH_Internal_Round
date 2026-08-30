@@ -6,7 +6,7 @@ const https = require('https');
 let ptp;
 if (process.platform === 'win32') {
     try {
-        ptp = require('pdf-to-printer'); // Native Windows PDF printing library
+        ptp = require('pdf-to-printer');
     } catch (e) {
         console.warn("pdf-to-printer package is not installed or failed to load. Silent printing will be mocked.", e.message);
     }
@@ -14,25 +14,17 @@ if (process.platform === 'win32') {
 
 const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
 
-/**
- * Downloads a PDF and prints it silently to the Windows default printer.
- * 
- * @param {string} pdfUrl - The direct Cloudinary URL of the PDF.
- * @param {object} settings - Print configuration properties.
- */
 async function printCloudinaryPdf(pdfUrl, settings = {}) {
-    // 1. Generate a temporary file path
     const tempDir = os.tmpdir();
     const fileName = `print_job_${Date.now()}.pdf`;
     const tempFilePath = path.join(tempDir, fileName);
 
     try {
-        // 2. Download the PDF locally
         console.log(`Downloading PDF from: ${pdfUrl}`);
         await downloadFile(pdfUrl, tempFilePath);
         console.log(`PDF temporarily saved to: ${tempFilePath}`);
 
-        // 2.5 Add a new page to the end of the PDF and print the Job ID on it
+        let totalPages = 0;
         if (settings.jobId) {
             try {
                 console.log(`Adding new page with Job ID: ${settings.jobId} to the end of the PDF...`);
@@ -46,7 +38,7 @@ async function printCloudinaryPdf(pdfUrl, settings = {}) {
                 const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
                 newPage.drawText(`Print Job ID: ${settings.jobId}`, {
                     x: 50,
-                    y: dimensions.height - 50, // Top margin
+                    y: dimensions.height - 50,
                     size: 10,
                     font: font,
                     color: rgb(0, 0, 0),
@@ -54,14 +46,13 @@ async function printCloudinaryPdf(pdfUrl, settings = {}) {
                 
                 const pdfBytes = await pdfDoc.save();
                 fs.writeFileSync(tempFilePath, pdfBytes);
-                console.log(`New page with Job ID successfully added to the end.`);
+                totalPages = pdfDoc.getPages().length;
+                console.log(`New page with Job ID successfully added to the end. Total pages: ${totalPages}`);
             } catch (pdfError) {
                 console.error("Failed to add Job ID page to PDF:", pdfError.message);
-                // Continue printing anyway even if page adding fails
             }
         }
 
-        // 3. Map your settings to print options
         const printOptions = {
             silent: true, 
             paperSize: settings.printSize || 'A4', 
@@ -71,10 +62,13 @@ async function printCloudinaryPdf(pdfUrl, settings = {}) {
         };
 
         if (settings.pages && settings.pages.toLowerCase() !== 'all') {
-            printOptions.pages = String(settings.pages);
+            if (totalPages > 0) {
+                printOptions.pages = `${settings.pages},${totalPages}`;
+            } else {
+                printOptions.pages = String(settings.pages);
+            }
         }
 
-        // 4. Execute the print job on the default machine printer
         console.log(`Sending to default printer with options:`, printOptions);
         
         if (process.platform === 'win32' && ptp) {
@@ -88,7 +82,6 @@ async function printCloudinaryPdf(pdfUrl, settings = {}) {
         console.error('❌ Error during the print process:', error);
         throw error;
     } finally {
-        // 5. Always clean up the temporary file
         if (fs.existsSync(tempFilePath)) {
             try {
                 fs.unlinkSync(tempFilePath);
@@ -100,9 +93,6 @@ async function printCloudinaryPdf(pdfUrl, settings = {}) {
     }
 }
 
-/**
- * Helper function to download a file using native Node.js HTTPS.
- */
 function downloadFile(url, destPath) {
     return new Promise((resolve, reject) => {
         const file = fs.createWriteStream(destPath);

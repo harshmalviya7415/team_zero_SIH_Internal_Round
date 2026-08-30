@@ -4,13 +4,11 @@ const Paymentdetails = require("../models/paymentdetails");
 const Printdetails = require("../models/printdetails");
 const { getIO } = require("../config/socket");
 
-// Initialize Razorpay
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID || 'dummy_id',
   key_secret: process.env.RAZORPAY_KEY_SECRET || 'dummy_secret',
 });
 
-// Helper function to calculate page count
 const getPagesToPrintCount = (rangeStr) => {
   if (!rangeStr) return 1;
   if (rangeStr.toLowerCase() === "all") return 1;
@@ -38,14 +36,12 @@ const paymentCreateOrder = async (req, res) => {
   }
 
   try {
-    // Verify printer shop online status via active Socket.io room connections
     let isPrinterOnline = false;
     try {
       const io = getIO();
       const room = io.sockets.adapter.rooms.get(`printer_${printSpecs.printershopid}`);
       isPrinterOnline = room && room.size > 0;
     } catch (socketError) {
-      // In isolated environments/tests, Socket.io is not started; default to online
       isPrinterOnline = true;
     }
 
@@ -55,7 +51,6 @@ const paymentCreateOrder = async (req, res) => {
       });
     }
 
-    // Calculate amount on the backend
     const copies = Number(printSpecs.printcopies) || 1;
     const pages = getPagesToPrintCount(printSpecs.printpagenos);
     const rate = printSpecs.printcolor === "Colour" ? 5 : 2;
@@ -81,7 +76,6 @@ const paymentCreateOrder = async (req, res) => {
       };
     }
 
-    // Save payment details with specs (but without printerjobid)
     const payment = await Paymentdetails.create({
       userid,
       amount: amountInRupees,
@@ -139,7 +133,6 @@ const paymentVerify = async (req, res) => {
     }
 
     if (isValidSignature) {
-      // Find the payment record
       const payment = await Paymentdetails.findOne({ razorpay_order_id });
       if (!payment) {
         return res.status(404).json({ message: "Payment session not found" });
@@ -149,7 +142,6 @@ const paymentVerify = async (req, res) => {
         return res.status(400).json({ message: "This payment has already been verified and processed" });
       }
 
-      // 1. Create the Print Job in Printdetails collection
       const newJob = await Printdetails.create({
         printershopid: payment.printSpecs.printershopid,
         userid: payment.userid,
@@ -159,10 +151,10 @@ const paymentVerify = async (req, res) => {
         printpapersize: payment.printSpecs.printpapersize,
         printcolor: payment.printSpecs.printcolor,
         duplex: payment.printSpecs.duplex || false,
-        printstatus: "Pending", // Initially queued as Pending once paid
+        printstatus: "Pending",
+        amount: payment.amount,
       });
 
-      // 2. Update payment details
       payment.status = "Paid";
       payment.razorpay_payment_id = razorpay_payment_id;
       payment.razorpay_signature = razorpay_signature;
@@ -171,7 +163,6 @@ const paymentVerify = async (req, res) => {
 
       console.log(`Payment success. Print Job created with ID: ${newJob._id}`);
 
-      // 3. Emit real-time notification to printer shop room with populated user
       let populatedJob = newJob;
       try {
         populatedJob = await Printdetails.findById(newJob._id).populate("userid");

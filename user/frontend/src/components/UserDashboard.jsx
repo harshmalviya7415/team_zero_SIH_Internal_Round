@@ -334,7 +334,18 @@ export default function UserDashboard() {
     const reader = new FileReader();
     reader.onload = function(evt) {
       const arr = new Uint8Array(evt.target.result);
-      const text = new TextDecoder("utf-8").decode(arr.slice(0, 100000));
+      const len = arr.length;
+      let text = "";
+      
+      // Read the beginning and end of the PDF where metadata is typically stored
+      if (len <= 200000) {
+        text = new TextDecoder("utf-8").decode(arr);
+      } else {
+        const firstPart = new TextDecoder("utf-8").decode(arr.slice(0, 100000));
+        const lastPart = new TextDecoder("utf-8").decode(arr.slice(len - 100000));
+        text = firstPart + "\n" + lastPart;
+      }
+
       const matches = text.match(/\/Count\s*(\d+)/g);
       let pagesCount = 1;
       if (matches) {

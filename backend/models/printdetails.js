@@ -44,6 +44,11 @@ const printdetailsSchema = new mongoose.Schema(
       required: true,
       enums: ["Pending", "In Progress", "Completed", "Collected", "Cancelled"],
     },
+    amount: {
+      type: Number,
+      required: true,
+      default: 0,
+    },
   },
 
   {

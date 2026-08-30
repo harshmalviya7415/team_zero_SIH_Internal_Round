@@ -192,6 +192,7 @@ export default function PrinterDashboard() {
           sides: job.duplex ? "Double-sided (Duplex)" : "Single-sided"
         },
         status: "Printing", // Set initial state directly to Printing as auto-spool starts
+        amount: job.amount || 0,
         placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         completedAt: null
       };
@@ -245,6 +246,7 @@ export default function PrinterDashboard() {
             : job.printstatus === "Cancelled"
             ? "Cancelled"
             : job.printstatus,
+          amount: job.amount || 0,
           placedAt: new Date(job.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           completedAt: null
         }));
@@ -288,6 +290,9 @@ export default function PrinterDashboard() {
   const pendingCount = orders.filter((o) => o.status === "Queued" || o.status === "Printing").length;
   const completedCount = orders.filter((o) => o.status === "Completed").length;
   const totalCount = orders.length;
+  const totalEarnings = orders
+    .filter((o) => o.status === "Completed")
+    .reduce((sum, o) => sum + (o.amount || 0), 0);
 
   // Filter Logic
   const filteredOrders = orders.filter((order) => {
@@ -316,6 +321,10 @@ export default function PrinterDashboard() {
         <div className="kpi-card blue">
           <h3>Total Orders</h3>
           <span className="kpi-value">{totalCount}</span>
+        </div>
+        <div className="kpi-card gold">
+          <h3>Total Earnings</h3>
+          <span className="kpi-value">₹{totalEarnings}</span>
         </div>
       </div>
 

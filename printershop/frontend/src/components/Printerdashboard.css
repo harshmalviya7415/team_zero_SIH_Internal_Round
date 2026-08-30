@@ -75,6 +75,7 @@
 .kpi-card.yellow { border-left-color: var(--color-warning); }
 .kpi-card.green { border-left-color: var(--color-success); }
 .kpi-card.blue { border-left-color: var(--color-info); }
+.kpi-card.gold { border-left-color: #D4AF37; }
 
 .kpi-card h3 {
   font-size: 0.85rem;

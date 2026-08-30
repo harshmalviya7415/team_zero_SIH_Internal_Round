@@ -1,4 +1,5 @@
 const Printdetails = require("../models/printdetails");
+const { getIO } = require("../config/socket");
 
 const jobStatusUpdate = async (req, res) => {
   const { jobId, status } = req.body;
@@ -27,6 +28,19 @@ const jobStatusUpdate = async (req, res) => {
     }
 
     console.log(`Job ${jobId} status updated to ${dbStatus}`);
+
+    // Emit real-time status update to all connected user clients
+    try {
+      const io = getIO();
+      io.emit("job_status_changed", {
+        jobId: job._id.toString(),
+        status: dbStatus
+      });
+      console.log(`Real-time job status broadcasted for: ${jobId} -> ${dbStatus}`);
+    } catch (socketError) {
+      console.error("Failed to broadcast job status change socket event:", socketError.message);
+    }
+
     res.json(job);
   } catch (error) {
     console.error("Error updating job status:", error);

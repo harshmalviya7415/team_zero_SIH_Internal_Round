@@ -67,6 +67,11 @@ const paymentDetailsSchema = new mongoose.Schema(
             printcolor: {
                 type: String,
                 required: true,
+            },
+            duplex: {
+                type: Boolean,
+                required: true,
+                default: false,
             }
         }
     },

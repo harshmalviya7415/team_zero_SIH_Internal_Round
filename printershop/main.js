@@ -44,3 +44,18 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
+
+const { ipcMain } = require("electron");
+const { printCloudinaryPdf } = require("./printService");
+
+ipcMain.on("print_document", async (event, data) => {
+  console.log("IPC print_document event received:", data);
+  try {
+    await printCloudinaryPdf(data.url, data.settings);
+    console.log("Silent printing completed successfully.");
+    event.reply("print_completed", { jobId: data.jobId, success: true });
+  } catch (error) {
+    console.error("Silent printing failed:", error);
+    event.reply("print_completed", { jobId: data.jobId, success: false, error: error.message });
+  }
+});

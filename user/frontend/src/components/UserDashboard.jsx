@@ -60,7 +60,7 @@ const INITIAL_JOBS = [
     pages: 12,
     color: "B/W",
     copies: 1,
-    orientation: "Portrait",
+    duplex: "Single-sided",
     amount: 24,
     status: "ready",
     pickupTime: "5:30 PM today",
@@ -72,7 +72,7 @@ const INITIAL_JOBS = [
     pages: 5,
     color: "Color",
     copies: 2,
-    orientation: "Portrait",
+    duplex: "Single-sided",
     amount: 60,
     status: "payment_pending",
   },
@@ -178,6 +178,28 @@ export default function UserDashboard() {
       });
     });
 
+    socket.on("job_status_changed", (data) => {
+      console.log("Job status changed event received:", data);
+      setJobs((prev) =>
+        prev.map((job) => {
+          if (job.id === data.jobId) {
+            console.log(`Updating job ${job.fileName} status to: ${data.status}`);
+            return {
+              ...job,
+              status: data.status === "Pending" 
+                ? "payment_pending" 
+                : data.status === "In Progress" 
+                ? "printing" 
+                : data.status === "Completed" 
+                ? "ready" 
+                : data.status,
+            };
+          }
+          return job;
+        })
+      );
+    });
+
     return () => {
       socket.disconnect();
     };
@@ -209,7 +231,7 @@ export default function UserDashboard() {
             pages: pagesCount,
             color: j.printcolor === "Colour" ? "Color" : "B/W",
             copies: j.printcopies,
-            orientation: "Portrait",
+            duplex: j.duplex ? "Double-sided" : "Single-sided",
             amount: j.printcopies * pagesCount * (j.printcolor === "Colour" ? 5 : 2),
             status: j.printstatus === "Pending" 
               ? "payment_pending" 
@@ -236,7 +258,7 @@ export default function UserDashboard() {
     file: null,
     pages: "",
     color: "B/W",
-    orientation: "Portrait",
+    duplex: "Single-sided",
     copies: 1,
     printpapersize: "A4",
   });
@@ -257,7 +279,7 @@ export default function UserDashboard() {
       file: null,
       pages: "",
       color: "B/W",
-      orientation: "Portrait",
+      duplex: "Single-sided",
       copies: 1,
       printpapersize: "A4",
     });
@@ -401,7 +423,8 @@ export default function UserDashboard() {
       printcopies: copies,
       printpagenos: newJob.pages,
       printpapersize: newJob.printpapersize || "A4",
-      printcolor: newJob.color === "Color" ? "Colour" : "Black and White"
+      printcolor: newJob.color === "Color" ? "Colour" : "Black and White",
+      duplex: newJob.duplex === "Double-sided"
     };
 
     try {
@@ -452,7 +475,7 @@ export default function UserDashboard() {
               pages: pagesCount,
               color: job.printcolor === "Colour" ? "Color" : "B/W",
               copies: job.printcopies,
-              orientation: "Portrait",
+              duplex: job.duplex ? "Double-sided" : "Single-sided",
               amount: job.printcopies * pagesCount * (job.printcolor === "Colour" ? 5 : 2),
               status: "printing",
             };
@@ -518,7 +541,7 @@ export default function UserDashboard() {
                 pages: pagesCount,
                 color: job.printcolor === "Colour" ? "Color" : "B/W",
                 copies: job.printcopies,
-                orientation: "Portrait",
+                duplex: job.duplex ? "Double-sided" : "Single-sided",
                 amount: job.printcopies * pagesCount * (job.printcolor === "Colour" ? 5 : 2),
                 status: "printing",
               };
@@ -783,14 +806,14 @@ export default function UserDashboard() {
                   </select>
                 </div>
                 <div className="form-group">
-                  <label htmlFor="orientation">Orientation</label>
+                  <label htmlFor="duplex">Duplex</label>
                   <select
-                    id="orientation"
-                    value={newJob.orientation}
-                    onChange={handleNewJobChange("orientation")}
+                    id="duplex"
+                    value={newJob.duplex}
+                    onChange={handleNewJobChange("duplex")}
                   >
-                    <option value="Portrait">Portrait</option>
-                    <option value="Landscape">Landscape</option>
+                    <option value="Single-sided">Single-sided</option>
+                    <option value="Double-sided">Double-sided</option>
                   </select>
                 </div>
                 <div className="form-group">
@@ -886,7 +909,7 @@ export default function UserDashboard() {
                   </div>
                   <div className="order-specs">
                     {job.pages} pages · {job.color} · {job.copies}{" "}
-                    {job.copies > 1 ? "copies" : "copy"} · {job.orientation}
+                    {job.copies > 1 ? "copies" : "copy"} · {job.duplex}
                   </div>
                   <div className="order-bottom">
                     <div>

@@ -95,7 +95,8 @@ const paymentCreateOrder = async (req, res) => {
         printcopies: copies,
         printpagenos: printSpecs.printpagenos,
         printpapersize: printSpecs.printpapersize,
-        printcolor: printSpecs.printcolor
+        printcolor: printSpecs.printcolor,
+        duplex: printSpecs.duplex
       }
     });
 
@@ -157,6 +158,7 @@ const paymentVerify = async (req, res) => {
         printpagenos: payment.printSpecs.printpagenos,
         printpapersize: payment.printSpecs.printpapersize,
         printcolor: payment.printSpecs.printcolor,
+        duplex: payment.printSpecs.duplex || false,
         printstatus: "In Progress", // Initially queued as In Progress once paid
       });
 

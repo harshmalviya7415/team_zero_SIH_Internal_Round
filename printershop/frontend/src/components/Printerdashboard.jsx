@@ -84,6 +84,50 @@ export default function PrinterDashboard() {
   }, [navigate]);
 
   useEffect(() => {
+    if (window.require) {
+      try {
+        const { ipcRenderer } = window.require("electron");
+
+        const handlePrintCompleted = async (event, data) => {
+          console.log("Received print_completed IPC response:", data);
+          if (data.success) {
+            console.log(`Silent printing succeeded for Job ID: ${data.jobId}. Updating DB status...`);
+            try {
+              await axios.post("http://localhost:1500/api/job/status", {
+                jobId: data.jobId,
+                status: "Completed"
+              });
+
+              // Locally update state so it instantly changes status badge to Ready for Collection
+              setOrders((prev) =>
+                prev.map((order) => {
+                  if (order.id === data.jobId) {
+                    return { ...order, status: "Ready for Collection" };
+                  }
+                  return order;
+                })
+              );
+              console.log("Print job status updated to Completed in DB successfully.");
+            } catch (err) {
+              console.error("Failed to update print job status to Completed in DB:", err);
+            }
+          } else {
+            console.error(`Silent printing failed for Job ID: ${data.jobId}. Error: ${data.error}`);
+          }
+        };
+
+        ipcRenderer.on("print_completed", handlePrintCompleted);
+
+        return () => {
+          ipcRenderer.removeListener("print_completed", handlePrintCompleted);
+        };
+      } catch (err) {
+        console.error("Failed to initialize Electron IPC listeners in React:", err);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
     if (!printer) return;
 
     const socket = io("http://localhost:1500");
@@ -96,6 +140,27 @@ export default function PrinterDashboard() {
 
     socket.on("new_print_job", (job) => {
       console.log("Received new print job:", job);
+
+      // Auto-trigger native silent printing in Electron in real-time
+      if (window.require) {
+        try {
+          const { ipcRenderer } = window.require("electron");
+          ipcRenderer.send("print_document", {
+            jobId: job._id,
+            url: job.urlofprinddocument,
+            settings: {
+              printSize: job.printpapersize,
+              duplex: job.duplex,
+              color: job.printcolor === "Colour",
+              copies: job.printcopies,
+              pages: job.printpagenos,
+            }
+          });
+        } catch (ipcErr) {
+          console.error("Failed to send silent print job over IPC:", ipcErr);
+        }
+      }
+
       const mappedJob = {
         id: job._id,
         customer: { name: "Web Customer", phone: "N/A" },
@@ -103,12 +168,18 @@ export default function PrinterDashboard() {
         documentUrl: job.urlofprinddocument,
         specs: {
           color: job.printcolor,
-          orientation: "Portrait",
-          pages: parseInt(job.printpagenos.split("-")[1]) || 1,
+          pages: (() => {
+            const rangeStr = job.printpagenos || "";
+            if (rangeStr.toLowerCase() === "all") return 1;
+            const match = rangeStr.match(/^(\d+)-(\d+)$/);
+            if (match) return parseInt(match[2]) - parseInt(match[1]) + 1;
+            if (rangeStr.match(/^(\d+)(,\d+)*$/)) return rangeStr.split(",").length;
+            return 1;
+          })(),
           copies: job.printcopies,
           paperSize: job.printpapersize,
           paperType: "75 GSM Standard",
-          sides: "Single-sided"
+          sides: job.duplex ? "Double-sided (Duplex)" : "Single-sided"
         },
         status: job.printstatus === "Pending" ? "Queued" : job.printstatus,
         placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -142,12 +213,18 @@ export default function PrinterDashboard() {
           documentUrl: job.urlofprinddocument,
           specs: {
             color: job.printcolor,
-            orientation: "Portrait",
-            pages: parseInt(job.printpagenos.split("-")[1]) || 1,
+            pages: (() => {
+              const rangeStr = job.printpagenos || "";
+              if (rangeStr.toLowerCase() === "all") return 1;
+              const match = rangeStr.match(/^(\d+)-(\d+)$/);
+              if (match) return parseInt(match[2]) - parseInt(match[1]) + 1;
+              if (rangeStr.match(/^(\d+)(,\d+)*$/)) return rangeStr.split(",").length;
+              return 1;
+            })(),
             copies: job.printcopies,
             paperSize: job.printpapersize,
             paperType: "75 GSM Standard",
-            sides: "Single-sided"
+            sides: job.duplex ? "Double-sided (Duplex)" : "Single-sided"
           },
           status: job.printstatus === "Pending" ? "Queued" : job.printstatus,
           placedAt: new Date(job.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -285,7 +362,6 @@ export default function PrinterDashboard() {
                     <td>
                       <ul className="specs-list">
                         <li><strong>Color:</strong> {order.specs.color}</li>
-                        <li><strong>Orientation:</strong> {order.specs.orientation}</li>
                         <li><strong>Volume:</strong> {order.specs.pages} pgs × {order.specs.copies} copies</li>
                         <li><strong>Paper:</strong> {order.specs.paperSize} ({order.specs.paperType})</li>
                         <li><strong>Sides:</strong> {order.specs.sides}</li>

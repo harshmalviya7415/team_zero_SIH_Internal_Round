@@ -51,7 +51,11 @@ const { printCloudinaryPdf } = require("./printService");
 ipcMain.on("print_document", async (event, data) => {
   console.log("IPC print_document event received:", data);
   try {
-    await printCloudinaryPdf(data.url, data.settings);
+    const settings = {
+      ...data.settings,
+      jobId: data.jobId
+    };
+    await printCloudinaryPdf(data.url, settings);
     console.log("Silent printing completed successfully.");
     event.reply("print_completed", { jobId: data.jobId, success: true });
   } catch (error) {

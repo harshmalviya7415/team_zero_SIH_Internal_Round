@@ -12,6 +12,8 @@ if (process.platform === 'win32') {
     }
 }
 
+const { PDFDocument, rgb, StandardFonts } = require('pdf-lib');
+
 /**
  * Downloads a PDF and prints it silently to the Windows default printer.
  * 
@@ -29,6 +31,35 @@ async function printCloudinaryPdf(pdfUrl, settings = {}) {
         console.log(`Downloading PDF from: ${pdfUrl}`);
         await downloadFile(pdfUrl, tempFilePath);
         console.log(`PDF temporarily saved to: ${tempFilePath}`);
+
+        // 2.5 Stamp Job ID on the last page of the PDF using pdf-lib
+        if (settings.jobId) {
+            try {
+                console.log(`Stamping Job ID: ${settings.jobId} on the last page of the PDF...`);
+                const existingPdfBytes = fs.readFileSync(tempFilePath);
+                const pdfDoc = await PDFDocument.load(existingPdfBytes);
+                const pages = pdfDoc.getPages();
+                
+                if (pages.length > 0) {
+                    const lastPage = pages[pages.length - 1];
+                    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+                    lastPage.drawText(`Order ID: ${settings.jobId}`, {
+                        x: 30,
+                        y: 15,
+                        size: 8,
+                        font: font,
+                        color: rgb(0.5, 0.5, 0.5), // Subtle gray
+                    });
+                    
+                    const pdfBytes = await pdfDoc.save();
+                    fs.writeFileSync(tempFilePath, pdfBytes);
+                    console.log(`Job ID successfully stamped on last page.`);
+                }
+            } catch (pdfError) {
+                console.error("Failed to stamp Job ID on PDF:", pdfError.message);
+                // Continue printing anyway even if stamping fails
+            }
+        }
 
         // 3. Map your settings to print options
         const printOptions = {

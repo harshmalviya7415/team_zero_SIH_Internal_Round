@@ -146,10 +146,13 @@ export default function UserDashboard() {
   }, []);
 
   useEffect(() => {
+    if (!user) return;
+
     const socket = io("http://localhost:1500");
 
     socket.on("connect", () => {
-      console.log("UserDashboard successfully connected to Socket.io server");
+      console.log("UserDashboard successfully connected to Socket.io server. Joining user room...");
+      socket.emit("join_user_room", user._id);
     });
 
     socket.on("connect_error", (error) => {
@@ -180,9 +183,12 @@ export default function UserDashboard() {
 
     socket.on("job_status_changed", (data) => {
       console.log("Job status changed event received:", data);
+      let targetJobName = "Your print job";
+
       setJobs((prev) =>
         prev.map((job) => {
           if (job.id === data.jobId) {
+            targetJobName = job.fileName;
             console.log(`Updating job ${job.fileName} status to: ${data.status}`);
             return {
               ...job,
@@ -198,12 +204,28 @@ export default function UserDashboard() {
           return job;
         })
       );
+
+      // Add a dynamic notification to the header notification list
+      const actionText = data.status === "In Progress"
+        ? "is now printing! 🖨️"
+        : data.status === "Completed"
+        ? "is completed and ready for pickup! 🎉"
+        : `status updated to: ${data.status}`;
+
+      setNotifications((prev) => [
+        {
+          id: `note-${Date.now()}`,
+          text: `"${targetJobName}" ${actionText}`,
+          time: "Just now",
+        },
+        ...prev,
+      ]);
     });
 
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;

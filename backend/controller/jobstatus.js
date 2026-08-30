@@ -29,14 +29,14 @@ const jobStatusUpdate = async (req, res) => {
 
     console.log(`Job ${jobId} status updated to ${dbStatus}`);
 
-    // Emit real-time status update to all connected user clients
+    // Emit real-time status update to the specific user's socket room
     try {
       const io = getIO();
-      io.emit("job_status_changed", {
+      io.to(`user_${job.userid.toString()}`).emit("job_status_changed", {
         jobId: job._id.toString(),
         status: dbStatus
       });
-      console.log(`Real-time job status broadcasted for: ${jobId} -> ${dbStatus}`);
+      console.log(`Real-time job status emitted to user_${job.userid.toString()} for: ${jobId} -> ${dbStatus}`);
     } catch (socketError) {
       console.error("Failed to broadcast job status change socket event:", socketError.message);
     }

@@ -159,7 +159,7 @@ const paymentVerify = async (req, res) => {
         printpapersize: payment.printSpecs.printpapersize,
         printcolor: payment.printSpecs.printcolor,
         duplex: payment.printSpecs.duplex || false,
-        printstatus: "In Progress", // Initially queued as In Progress once paid
+        printstatus: "Pending", // Initially queued as Pending once paid
       });
 
       // 2. Update payment details

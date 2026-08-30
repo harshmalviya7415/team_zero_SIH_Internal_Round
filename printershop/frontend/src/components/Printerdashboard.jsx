@@ -141,6 +141,14 @@ export default function PrinterDashboard() {
     socket.on("new_print_job", (job) => {
       console.log("Received new print job:", job);
 
+      // Automatically update database status to Printing (In Progress) when printing starts
+      axios.post("http://localhost:1500/api/job/status", {
+        jobId: job._id,
+        status: "In Progress"
+      }, {
+        withCredentials: true
+      }).catch(err => console.error("Failed to update status to In Progress on job start:", err));
+
       // Auto-trigger native silent printing in Electron in real-time
       if (window.require) {
         try {
@@ -181,7 +189,13 @@ export default function PrinterDashboard() {
           paperType: "75 GSM Standard",
           sides: job.duplex ? "Double-sided (Duplex)" : "Single-sided"
         },
-        status: job.printstatus === "Pending" ? "Queued" : job.printstatus,
+        status: job.printstatus === "Pending" 
+          ? "Queued" 
+          : job.printstatus === "In Progress" 
+          ? "Printing" 
+          : job.printstatus === "Completed" 
+          ? "Ready for Collection" 
+          : job.printstatus,
         placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         completedAt: null
       };
@@ -226,7 +240,13 @@ export default function PrinterDashboard() {
             paperType: "75 GSM Standard",
             sides: job.duplex ? "Double-sided (Duplex)" : "Single-sided"
           },
-          status: job.printstatus === "Pending" ? "Queued" : job.printstatus,
+          status: job.printstatus === "Pending" 
+            ? "Queued" 
+            : job.printstatus === "In Progress" 
+            ? "Printing" 
+            : job.printstatus === "Completed" 
+            ? "Ready for Collection" 
+            : job.printstatus,
           placedAt: new Date(job.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           completedAt: null
         }));

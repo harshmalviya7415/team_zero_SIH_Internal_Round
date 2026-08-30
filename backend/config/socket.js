@@ -43,6 +43,11 @@ const initSocket = (server) => {
       }
     });
 
+    socket.on("join_user_room", (userid) => {
+      socket.join(`user_${userid}`);
+      console.log(`Socket ${socket.id} joined user room: user_${userid}`);
+    });
+
     socket.on("disconnect", async () => {
       console.log("Socket disconnected:", socket.id);
       if (socket.printershopid) {

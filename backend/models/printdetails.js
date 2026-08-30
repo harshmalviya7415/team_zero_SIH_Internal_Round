@@ -34,6 +34,11 @@ const printdetailsSchema = new mongoose.Schema(
       required: true,
       enums: ["Black and White", "Colour"],
     },
+    duplex: {
+      type: Boolean,
+      required: true,
+      default: false,
+    },
     printstatus: {
       type: String,
       required: true,

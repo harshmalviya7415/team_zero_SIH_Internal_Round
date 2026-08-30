@@ -1,8 +1,29 @@
-# 🖨️ SIH Team Zero Internal Round - Project Setup Guide
+# 🖨️ Smart Campus Printing & Document Services
 
-Welcome to the **Team Zero SIH Internal Round** repository. This workspace contains two core applications:
-1. **[printershop](file:///Users/apple/Desktop/SIH/printershop)**: An Electron-based desktop application (agent) designed for printer shops, featuring a React frontend and an Express backend.
-2. **[user](file:///Users/apple/Desktop/SIH/user)**: A web application designed for users/customers, featuring a React frontend and an Express backend.
+## 🏆 SIH Internal Round Project - Team Zero
+
+This repository contains the source code for the **Smart Campus Printing & Document Services** system, developed for the Smart India Hackathon (SIH) Internal Round by **Team Zero**.
+
+### 👥 Team Members
+*   **Amoolya Kamath** (251 CS106)
+*   **Aditya Durgad** (251IT005)
+*   **Chethan Kumar K L** (251IT018)
+*   **Harsh Malviya** (251CV116)
+*   **Havish S** (251CS127)
+*   **N Shreeda Kumar** (251IT039)
+
+---
+
+## 📖 About the Project
+
+### The Problem
+College campuses suffer from high congestion and long queues at local print shops during peak operational hours. Students lack real-time visibility into shop availability, opening status, and queue depth. Furthermore, sharing media is frictional and unsafe, relying on manual, in-person file transfers via flash drives, local messaging apps, or emails.
+
+### The Proposed Solution
+Our system bridges college web portals with local print shop hardware:
+1. **User Web Portal**: Allows students to upload documents (PDF), select print specifications (copies, paper size, color mode, single/double-sided), make payments securely online, and track the live progress of their jobs.
+2. **Electron Desktop Print Agent**: A secure desktop client installed at the print shop. It operates silently in the background, registers local printers, automatically downloads paid documents, appends a transaction log sheet, and spools them directly to the hardware printer.
+3. **No Operator Intervention**: The print shop operator does not need to accept, review, or manually trigger print requests. The print outputs automatically from the system, and status transitions ("In Progress", "Completed") sync back to the user in real-time.
 
 ---
 
@@ -10,15 +31,20 @@ Welcome to the **Team Zero SIH Internal Round** repository. This workspace conta
 
 ```text
 team_zero_SIH_Internal_Round/
-├── printershop/                   # Electron Desktop Agent for Printer Shops
-│   ├── backend/                   # Express API Server (Port 1500)
-│   ├── frontend/                  # React + Vite + Tailwind Frontend (Port 5173 / Electron)
-│   ├── package.json               # Main Electron Configuration & Scripts
-│   └── main.js                    # Electron Main Entrypoint
+├── backend/                       # Shared Node.js Express Backend (Port 1500)
+│   ├── config/                    # Database (Mongoose) & Socket server configurations
+│   ├── controller/                # Request handlers (payments, job status, printer registrations)
+│   ├── models/                    # Mongoose database models
+│   └── server.js                  # Main Express and Socket.IO server entrypoint
 │
-└── user/                          # Web Portal for Customers
-    ├── backend/                   # Express API Server (Port 1600)
-    └── frontend/                  # React + Vite + Tailwind Frontend (Port 5173)
+├── printershop/                   # Electron Desktop Agent for Printer Shops
+│   ├── frontend/                  # React + Vite Frontend (runs inside Electron)
+│   ├── main.js                    # Electron main process entrypoint
+│   ├── printService.js            # PDF-lib modification and print spool service
+│   └── package.json               # Electron configuration and scripts
+│
+└── user/                          # User Web Application
+    └── frontend/                  # React + Vite customer portal web client
 ```
 
 ---
@@ -29,151 +55,120 @@ team_zero_SIH_Internal_Round/
 | :--- | :--- |
 | **Desktop Shell** | [Electron](https://www.electronjs.org/) |
 | **Frontend Framework** | [React 19](https://react.dev/) + [Vite](https://vite.dev/) |
-| **Styling** | [Tailwind CSS v4](https://tailwindcss.com/) |
-| **Backend API** | [Node.js](https://nodejs.org/) + [Express 5](https://expressjs.com/) |
+| **Styling** | Vanilla CSS + [Tailwind CSS v4](https://tailwindcss.com/) |
+| **Backend API** | [Node.js](https://nodejs.org/) + [Express](https://expressjs.com/) |
 | **Real-time Communication** | [Socket.io](https://socket.io/) (WebSockets) |
 | **Database** | [MongoDB](https://www.mongodb.com/) via [Mongoose](https://mongoosejs.com/) |
 | **Security & Auth** | JSON Web Tokens (JWT) + BCryptJS |
+| **PDF Manipulation** | [PDF-Lib](https://pdf-lib.js.org/) |
+| **Native Printing** | [pdf-to-printer](https://github.com/artiebits/pdf-to-printer) (Windows print spooler) |
 
 ---
 
-## 📋 Prerequisites
+## 🚀 Setup & Launch Guide
 
-Before setting up the project, make sure you have the following installed on your machine:
-- **Node.js** (v18 or higher recommended)
-- **npm** (v9 or higher)
-- **MongoDB Community Server** (running locally on port `27017` or a remote MongoDB Atlas connection URI)
-
----
-
-## 🔑 Environment Variables Setup
-
-Both backend servers rely on environment variables (like ports and database connection URIs) configured via `.env` files. In each backend folder, you will find a `[env.example](file:///Users/apple/Desktop/SIH/printershop/backend/.env.example)` file containing template/placeholder values. 
-
-Before running the applications, you must create a `.env` file in both backend directories by copying the `.env.example` file.
-
-| Application Backend | Config File Location | Port (Default) | MongoDB URI (Default) |
-| :--- | :--- | :--- | :--- |
-| **Printer Shop** | `[printershop/backend/.env](file:///Users/apple/Desktop/SIH/printershop/backend/.env)` | `1500` | `mongodb://localhost:27017/printershop` |
-| **User Portal** | `[user/backend/.env](file:///Users/apple/Desktop/SIH/user/backend/.env)` | `1600` | `mongodb://localhost:27017/user` |
+### 📋 Prerequisites
+*   **Node.js** (v18 or higher)
+*   **MongoDB Community Server** (running locally on port `27017` or a remote Atlas connection string)
+*   **Default System Printer**: Ensure a physical printer is active, or use **Microsoft Print to PDF** as the default system printer on Windows for virtual/testing environments.
 
 ---
 
-## 🚀 Step-by-Step Setup Guide
-
-### 1. Database Setup
-
-Ensure your local MongoDB instance is running. If you are using custom ports or a hosted MongoDB instance (like MongoDB Atlas), you can update the `MONGO_URI` variable in the respective `.env` files as detailed below.
-
----
-
-### 2. Printer Shop Agent Setup (Electron Desktop App)
-
-The Printer Shop application has a backend server and an Electron desktop wrapper running a React frontend.
-
-#### A. Backend Setup
+### 1. Database & Shared Backend Setup
 1. Open a terminal and navigate to the backend folder:
    ```bash
-   cd printershop/backend
+   cd backend
    ```
 2. Install the backend dependencies:
    ```bash
    npm install
    ```
-3. Copy the `.env.example` file to create your local configuration:
-   ```bash
-   cp .env.example .env
-   ```
-4. Verify or configure the environment variables in `[printershop/backend/.env](file:///Users/apple/Desktop/SIH/printershop/backend/.env)`:
+3. Create a `.env` file in the `backend/` directory by copying `.env.example` (or configure it manually):
    ```env
    PORT=1500
    MONGO_URI=mongodb://localhost:27017/printershop
+   JWT_SECRET=your_jwt_secret_here
+   RAZORPAY_KEY_ID=your_razorpay_key_id
+   RAZORPAY_KEY_SECRET=your_razorpay_key_secret
    ```
-5. Start the backend API server:
+4. Start the backend API & Socket server:
    ```bash
    npm start
    ```
    *(The server will run on `http://localhost:1500`)*
 
-#### B. Desktop App & Frontend Setup
-1. Open a new terminal and navigate to the printershop root:
-   ```bash
-   cd printershop
-   ```
-2. Install the top-level Electron and development dependencies:
-   ```bash
-   npm install
-   ```
-3. Navigate to the frontend directory and install frontend dependencies:
-   ```bash
-   cd frontend
-   ```
-   ```bash
-   npm install
-   ```
-4. Navigate back to the `printershop` root:
-   ```bash
-   cd ..
-   ```
-5. Start the Electron agent in development mode (this will concurrently start the Vite dev server and open the Electron shell):
-   ```bash
-   npm run dev
-   ```
-
 ---
 
-### 3. User Portal Setup (Web App)
-
-The User Portal is a web application accessible via standard web browsers.
-
-#### A. Backend Setup
-1. Open a new terminal and navigate to the user backend folder:
-   ```bash
-   cd user/backend
-   ```
-2. Install the backend dependencies:
-   ```bash
-   npm install
-   ```
-3. Copy the `.env.example` file to create your local configuration:
-   ```bash
-   cp .env.example .env
-   ```
-4. Verify or configure the environment variables in `[user/backend/.env](file:///Users/apple/Desktop/SIH/user/backend/.env)`:
-   ```env
-   PORT=1600
-   MONGO_URI=mongodb://localhost:27017/user
-   ```
-5. Start the backend API server:
-   ```bash
-   node server.js
-   ```
-   *(The server will run on `http://localhost:1600`)*
-
-#### B. Frontend Setup
-1. Open a new terminal and navigate to the user frontend folder:
+### 2. User Portal Setup (Web App)
+1. Open a new terminal and navigate to the user frontend directory:
    ```bash
    cd user/frontend
    ```
-2. Install frontend dependencies:
+2. Install the frontend dependencies:
    ```bash
    npm install
    ```
-3. Start the Vite React development server:
+3. Start the Vite React web client:
    ```bash
    npm run dev
    ```
-   *(The app will run on `http://localhost:5173` or the next available port)*
+   *(By default, this will run on `http://localhost:5173`)*
 
 ---
 
-## 📝 Configuration Summary
+### 3. Printer Shop Agent Setup (Electron Desktop App)
+1. Open a new terminal and navigate to the printershop root directory:
+   ```bash
+   cd printershop
+   ```
+2. Install the Electron agent dependencies:
+   ```bash
+   npm install
+   ```
+3. Navigate to the printershop frontend directory:
+   ```bash
+   cd frontend
+   ```
+4. Install frontend dependencies:
+   ```bash
+   npm install
+   ```
+5. Navigate back to the `printershop` root:
+   ```bash
+   cd ..
+   ```
+6. Start the Electron agent in development mode:
+   ```bash
+   npm run dev
+   ```
+   *(Vite dev server will bind to port `5174`, and Electron will launch and render the dashboard)*
 
-Here is a summary of the ports used by default:
+---
 
-* **Printer Shop Application**:
-  * Backend: `http://localhost:1500`
-  * Frontend Dev Server: `http://localhost:5173` (rendered inside Electron wrapper)
-* **User Application**:
-  * Backend: `http://localhost:1600`
-  * Frontend Dev Server: `http://localhost:5173` (or `http://localhost:5174` if run concurrently)
+## 🛠️ Troubleshooting Tips
+
+### 🖥️ Electron App shows a Blank / White Page
+Vite and Electron run concurrently. The user dashboard consumes default port `5173`, pushing the printer shop dev server to port `5174`.
+*   Ensure that `printershop/package.json` has `--port 5174` configured for `dev:frontend`.
+*   Ensure that `printershop/main.js` calls `win.loadURL("http://localhost:5174")` to look at the correct dev server port.
+
+### 🔴 Printer Shop is Offline error during order checkout
+To prevent customers from placing paid orders to closed print shops:
+*   The checkout API verifies if the printer shop has an active Socket connection in the room `printer_${printershopid}`.
+*   Make sure the Electron desktop app is launched, logged in, and online. Once online, the shop status updates automatically in the DB.
+
+### 📝 Page Range shows "1-1" only on upload
+PDF metadata `/Count` properties can be written at the end of the file or compressed into object streams, especially when files contain special characters like `-`, `_`, `(`, or `)` in their name.
+*   Our zero-dependency page count reader scans the first 100KB and the last 100KB of the file buffer to accurately retrieve the page count, ensuring correct page ranges and pricing.
+
+### ⚠️ Mock Payment Signature Bypass
+For local sandbox testing without active Razorpay credentials:
+*   Ensure the checkout Razorpay Order ID parameter starts with `"order_mock_"` (e.g. `order_mock_12345`). This instructs the backend verification endpoint to bypass signature hashing.
+
+---
+
+## 🔮 Future Enhancements
+
+*   **Offline Resilience**: Implement Electron-level local storage (SQLite or local JSON store) to save pending print jobs locally. In case of intermittent campus Wi-Fi drops, the print agent will queue jobs locally and resume printing automatically once connection is restored.
+*   **Live Queue Depth Estimation**: Display estimated wait times on the student portal based on the active queue size of each print shop, enabling users to choose less busy locations.
+*   **QR Code Collection**: Allow operators to scan a QR code from the user's phone to verify collections and automatically mark completed print jobs as picked up.

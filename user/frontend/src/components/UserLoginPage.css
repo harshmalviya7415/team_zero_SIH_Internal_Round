@@ -1,10 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-bg: #0B0D14;
+  --color-surface: #151925;
+  --color-primary: #8B7CFF;
+  --color-text: #F1F2F7;
+  --color-text-muted: #6F7589;
+  --color-border: #292E3D;
+  --color-border-hover: #3A4053;
+  --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.30);
+}
+
 html, body {
   margin: 0;
   padding: 0;
   width: 100%;
   min-height: 100vh;
-  background-color: #D3C9C1;
+  background-color: var(--color-bg);
   box-sizing: border-box;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 *, *:before, *:after {
@@ -14,7 +28,7 @@ html, body {
 #root {
   width: 100%;
   min-height: 100vh;
-  background-color: #D3C9C1;
+  background-color: var(--color-bg);
 }
 
 .login-container {
@@ -23,33 +37,56 @@ html, body {
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  /* Warm beige background from the color palette */
-  background-color: #D3C9C1; 
-  font-family: 'Inter', sans-serif;
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(139, 124, 255, 0.10),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 0% 40%,
+      rgba(69, 214, 176, 0.035),
+      transparent 25%
+    ),
+    var(--color-bg);
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .login-card {
+  position: relative;
   width: 100%;
   max-width: 440px;
   padding: 3rem 2.5rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  color: #333333;
+  background: linear-gradient(145deg, #161A27, #131620);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
 }
 
-/* Serif font for the elegant heading */
+/* Subtle glowing top border */
+.login-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 124, 255, 0.30), transparent);
+}
+
 .login-card h2 {
   margin-bottom: 0.75rem;
-  color: #111111;
+  color: #FFFFFF;
   font-size: 2.2rem;
-  font-family: 'Playfair Display', serif; 
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
   text-align: left;
+  letter-spacing: -0.04em;
 }
 
 .login-card p {
-  color: #555555;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   margin-bottom: 2rem;
   text-align: left;
@@ -62,69 +99,104 @@ html, body {
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #444444;
-  margin-bottom: 0.4rem;
+  color: #D8DAE4;
+  margin-bottom: 0.45rem;
 }
 
 .form-group input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: #ffffff;
-  border: 1px solid #E2E2E2;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: #333333;
+  padding: 0.65rem 0.85rem;
+  background: #0F121A;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  font-size: 0.83rem;
+  color: var(--color-text);
   outline: none;
-  transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  font-family: 'JetBrains Mono', monospace;
 }
 
 .form-group input::placeholder {
-  color: #999999;
+  color: #62687A;
+}
+
+.form-group input:hover {
+  border-color: var(--color-border-hover);
 }
 
 .form-group input:focus {
-  border-color: #A38C82;
-  box-shadow: 0 0 0 3px rgba(163, 140, 130, 0.15);
+  border-color: var(--color-primary);
+  background: #11141E;
+  box-shadow: 
+    0 0 0 3px rgba(139, 124, 255, 0.12),
+    0 0 15px rgba(139, 124, 255, 0.06);
 }
 
-/* Small, left-aligned dark brown pill button */
 .btn-submit {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: auto;
-  padding: 0.5rem 1.75rem;
-  background-color: #634E45; 
-  color: #ffffff;
-  border: none;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  min-width: 105px;
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #9B8CFF 0%, #7C6CF2 100%);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: background-color 0.2s ease;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+  box-shadow: 
+    0 4px 14px rgba(139, 124, 255, 0.30),
+    0 0 0 1px rgba(139, 124, 255, 0.10);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
 }
 
 .btn-submit:hover {
-  background-color: #4A3A33;
+  background: linear-gradient(135deg, #A99CFF 0%, #8979FF 100%);
+  border-color: rgba(255, 255, 255, 0.20);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 7px 22px rgba(139, 124, 255, 0.42),
+    0 0 18px rgba(139, 124, 255, 0.15);
 }
 
-/* Left-aligned footer link */
+.btn-submit:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(139, 124, 255, 0.25);
+}
+
 .register-link {
   text-align: left;
   margin-top: 1.5rem;
-  font-size: 0.85rem;
-  color: #555555;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
 }
 
 .register-link a {
-  color: #A38C82;
+  color: var(--color-primary);
   text-decoration: none;
   font-weight: 600;
   margin-left: 0.25rem;
+  transition: color 0.2s ease;
 }
 
 .register-link a:hover {
-  text-decoration: underline;
+  color: #A99CFF;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 2.5rem 1.5rem; 
+  }
+  
+  .login-card h2 {
+    font-size: 1.8rem; 
+  }
 }

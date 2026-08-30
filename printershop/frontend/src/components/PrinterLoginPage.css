@@ -1,4 +1,15 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+:root {
+  --color-bg: #0B0D14;
+  --color-surface: #151925;
+  --color-primary: #8B7CFF;
+  --color-text: #F1F2F7;
+  --color-text-muted: #6F7589;
+  --color-border: #292E3D;
+  --color-border-hover: #3A4053;
+  --shadow-md: 0 8px 25px rgba(0, 0, 0, 0.30);
+}
 
 .register-container {
   min-height: 100vh;
@@ -6,35 +17,62 @@
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background-color: #D3C9C1;
-  font-family: 'Inter', sans-serif;
+  background:
+    radial-gradient(
+      circle at 85% 0%,
+      rgba(139, 124, 255, 0.10),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 0% 40%,
+      rgba(69, 214, 176, 0.035),
+      transparent 25%
+    ),
+    var(--color-bg);
+  font-family: 'JetBrains Mono', monospace;
+  box-sizing: border-box;
 }
 
 .register-card {
+  position: relative;
   width: 100%;
   max-width: 440px;
   padding: 3rem 2.5rem;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
-  color: #333333;
+  background: linear-gradient(145deg, #161A27, #131620);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  box-shadow: var(--shadow-md);
+  color: var(--color-text);
+}
+
+/* Subtle glowing top border */
+.register-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 12%;
+  right: 12%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(139, 124, 255, 0.30), transparent);
 }
 
 .register-card h2 {
   margin-bottom: 0.75rem;
-  color: #111111;
+  color: #FFFFFF;
   font-size: 2.2rem;
-  font-family: 'Playfair Display', serif;
+  font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
   text-align: left;
+  letter-spacing: -0.04em;
 }
 
 .register-card p {
-  color: #555555;
+  color: var(--color-text-muted);
   font-size: 0.9rem;
   margin-bottom: 2rem;
   text-align: left;
   line-height: 1.5;
+  white-space: wrap; /* Keeps text on one line */
 }
 
 .form-group {
@@ -43,78 +81,107 @@
 
 .form-group label {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: #444444;
-  margin-bottom: 0.4rem;
+  color: #D8DAE4;
+  margin-bottom: 0.45rem;
 }
 
 .form-group input,
 .form-group select {
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: #ffffff;
-  border: 1px solid #E2E2E2;
-  border-radius: 6px;
-  font-size: 0.9rem;
-  color: #333333;
+  padding: 0.65rem 0.85rem;
+  background: #0F121A;
+  border: 1px solid var(--color-border);
+  border-radius: 7px;
+  font-size: 0.83rem;
+  color: var(--color-text);
   outline: none;
-  transition: all 0.2s ease;
-  font-family: 'Inter', sans-serif;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+  font-family: 'JetBrains Mono', monospace;
+  box-sizing: border-box;
 }
 
 .form-group input::placeholder {
-  color: #999999;
+  color: #62687A;
+}
+
+.form-group input:hover,
+.form-group select:hover {
+  border-color: var(--color-border-hover);
 }
 
 .form-group input:focus,
 .form-group select:focus {
-  border-color: #A38C82;
-  box-shadow: 0 0 0 3px rgba(163, 140, 130, 0.15);
+  border-color: var(--color-primary);
+  background: #11141E;
+  box-shadow: 
+    0 0 0 3px rgba(139, 124, 255, 0.12),
+    0 0 15px rgba(139, 124, 255, 0.06);
 }
 
 .form-group select {
   appearance: none;
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23999999%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg xmlns='http://www.w3.org/2000/svg' width='292.4' height='292.4'%3E%3Cpath fill='%238B7CFF' d='M287 69.4a17.6 17.6 0 0 0-13-5.4H18.4c-5 0-9.3 1.8-12.9 5.4A17.6 17.6 0 0 0 0 82.2c0 5 1.8 9.3 5.4 12.9l128 127.9c3.6 3.6 7.8 5.4 12.8 5.4s9.2-1.8 12.8-5.4L287 95c3.5-3.5 5.4-7.8 5.4-12.8 0-5-1.9-9.2-5.5-12.8z'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 1rem center;
-  background-size: 0.6rem auto;
+  background-size: 0.55rem auto;
   padding-right: 2.5rem;
 }
 
 .btn-submit {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: auto;
-  padding: 0.5rem 1.75rem;
-  background-color: #634E45;
-  color: #ffffff;
-  border: none;
-  border-radius: 20px;
-  font-size: 0.9rem;
-  font-weight: 500;
+  min-width: 105px;
+  padding: 0.6rem 1.25rem;
+  background: linear-gradient(135deg, #9B8CFF 0%, #7C6CF2 100%);
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
   cursor: pointer;
   margin-top: 0.5rem;
-  transition: background-color 0.2s ease;
+  font-family: 'JetBrains Mono', monospace;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+  box-shadow: 
+    0 4px 14px rgba(139, 124, 255, 0.30),
+    0 0 0 1px rgba(139, 124, 255, 0.10);
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease, border-color 0.2s ease;
 }
 
 .btn-submit:hover {
-  background-color: #4A3A33;
+  background: linear-gradient(135deg, #A99CFF 0%, #8979FF 100%);
+  border-color: rgba(255, 255, 255, 0.20);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 7px 22px rgba(139, 124, 255, 0.42),
+    0 0 18px rgba(139, 124, 255, 0.15);
+}
+
+.btn-submit:active {
+  transform: translateY(0);
+  box-shadow: 0 3px 10px rgba(139, 124, 255, 0.25);
 }
 
 .login-link {
   text-align: left;
   margin-top: 1.5rem;
-  font-size: 0.85rem;
-  color: #555555;
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
 }
 
 .login-link a {
-  color: #A38C82;
-  text-decoration: none;
-  font-weight: 600;
-  margin-left: 0.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 2rem;
+  text-align: left;
+  line-height: 1.5;
 }
 
 .login-link a:hover {
-  text-decoration: underline;
+  color: #A99CFF;
 }

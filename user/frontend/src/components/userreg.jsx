@@ -63,14 +63,14 @@ export default function RegisterForm() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="fullname">Full Name</label>
+            <label htmlFor="fullname">Username</label>
             <input
               id="fullname"
               type="text"
               name="fullname"
               value={formData.fullname}
               onChange={handleChange}
-              placeholder="Your Name"
+              placeholder="User Name"
             />
             {errors.fullname && <span className="error-text">{errors.fullname}</span>}
           </div>
@@ -83,7 +83,7 @@ export default function RegisterForm() {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="yourname@example.com"
+              placeholder="username@example.com"
             />
             {errors.email && <span className="error-text">{errors.email}</span>}
           </div>

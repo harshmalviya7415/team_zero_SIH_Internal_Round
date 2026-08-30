@@ -195,6 +195,10 @@ export default function PrinterDashboard() {
           ? "Printing" 
           : job.printstatus === "Completed" 
           ? "Ready for Collection" 
+          : job.printstatus === "Collected"
+          ? "Completed"
+          : job.printstatus === "Cancelled"
+          ? "Cancelled"
           : job.printstatus,
         placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         completedAt: null
@@ -246,6 +250,10 @@ export default function PrinterDashboard() {
             ? "Printing" 
             : job.printstatus === "Completed" 
             ? "Ready for Collection" 
+            : job.printstatus === "Collected"
+            ? "Completed"
+            : job.printstatus === "Cancelled"
+            ? "Cancelled"
             : job.printstatus,
           placedAt: new Date(job.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           completedAt: null
@@ -272,7 +280,7 @@ export default function PrinterDashboard() {
           order.id === orderId
             ? {
                 ...order,
-                status: newStatus,
+                status: newStatus === "Collected" ? "Completed" : newStatus,
                 completedAt:
                   newStatus === "Ready for Collection"
                     ? new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -406,26 +414,10 @@ export default function PrinterDashboard() {
                     {/* Actions */}
                     <td>
                       <div className="action-buttons">
-                        {order.status === "Queued" && (
-                          <button
-                            className="btn-action btn-print"
-                            onClick={() => updateStatus(order.id, "Printing")}
-                          >
-                            Print Now
-                          </button>
-                        )}
-                        {order.status === "Printing" && (
-                          <button
-                            className="btn-action btn-ready"
-                            onClick={() => updateStatus(order.id, "Ready for Collection")}
-                          >
-                            Mark Ready
-                          </button>
-                        )}
                         {order.status === "Ready for Collection" && (
                           <button
                             className="btn-action btn-complete"
-                            onClick={() => updateStatus(order.id, "Completed")}
+                            onClick={() => updateStatus(order.id, "Collected")}
                           >
                             Mark Collected
                           </button>

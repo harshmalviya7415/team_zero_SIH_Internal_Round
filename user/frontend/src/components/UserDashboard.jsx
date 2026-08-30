@@ -198,6 +198,10 @@ export default function UserDashboard() {
                 ? "printing" 
                 : data.status === "Completed" 
                 ? "ready" 
+                : data.status === "Collected"
+                ? "collected"
+                : data.status === "Cancelled"
+                ? "payment_failed"
                 : data.status,
             };
           }
@@ -261,6 +265,10 @@ export default function UserDashboard() {
               ? "printing" 
               : j.printstatus === "Completed" 
               ? "ready" 
+              : j.printstatus === "Collected"
+              ? "collected"
+              : j.printstatus === "Cancelled"
+              ? "payment_failed"
               : j.printstatus,
           };
         });

@@ -12,8 +12,12 @@ const jobStatusUpdate = async (req, res) => {
   let dbStatus = status;
   if (status === "Printing" || status === "Queued" || status === "In Progress" || status === "printing") {
     dbStatus = "In Progress";
-  } else if (status === "Ready for Collection" || status === "Completed" || status === "collected" || status === "ready") {
+  } else if (status === "Ready for Collection" || status === "Completed" || status === "ready") {
     dbStatus = "Completed";
+  } else if (status === "Collected" || status === "collected") {
+    dbStatus = "Collected";
+  } else if (status === "Cancelled" || status === "cancelled") {
+    dbStatus = "Cancelled";
   }
 
   try {

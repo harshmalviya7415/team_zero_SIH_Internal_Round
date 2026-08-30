@@ -42,7 +42,7 @@ const printdetailsSchema = new mongoose.Schema(
     printstatus: {
       type: String,
       required: true,
-      enums: ["Pending", "In Progress", "Completed"],
+      enums: ["Pending", "In Progress", "Completed", "Collected", "Cancelled"],
     },
   },
 

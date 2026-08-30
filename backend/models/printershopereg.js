@@ -23,14 +23,14 @@ const printershopregSchema = new mongoose.Schema(
       required: true,
         },
     services: {
-        type: String,
+        type: [String],
         required: true,
-        enums: ["Black and White", "Colour", ]
-        },
+        enum: ["Black and White", "Colour"]
+    },
     pagesizes: {
-        type: String,
+        type: [String],
         required: true,
-        enums: ["A4", "A3", "A2", "A1", "A0"]
+        enum: ["A4", "A3", "A2", "A1", "A0"]
     },
     password: {
       type: String,

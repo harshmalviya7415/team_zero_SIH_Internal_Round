@@ -133,8 +133,15 @@ export default function UserDashboard() {
             name: p.shopname || p.fullname,
             distance: "0.5 km away",
             status: isActive ? "open" : "closed",
-            services: [p.services || "B/W"],
-            pagesizes: p.pagesizes || "A4",
+            services: (() => {
+              const rawServices = Array.isArray(p.services) ? p.services : [p.services || "Black and White"];
+              return rawServices.map((s) => {
+                if (s === "Black and White") return "B/W";
+                if (s === "Colour") return "Color";
+                return s;
+              });
+            })(),
+            pagesizes: Array.isArray(p.pagesizes) ? p.pagesizes : [p.pagesizes || "A4"],
           };
         });
         setShops(mapped);

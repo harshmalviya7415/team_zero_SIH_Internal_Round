@@ -122,3 +122,42 @@
 .login-link a:hover {
   text-decoration: underline;
 }
+
+/* Checkbox groups styling */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  background: #fbfbfc;
+  border: 1px solid #E2E2E2;
+  border-radius: 6px;
+}
+
+.grid-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+}
+
+.checkbox-label {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #000000 !important;
+  cursor: pointer;
+  user-select: none;
+  margin-bottom: 0 !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  cursor: pointer;
+  accent-color: #634E45;
+  padding: 0 !important;
+  margin: 0 !important;
+}

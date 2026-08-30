@@ -11,8 +11,8 @@ export default function RegisterForm() {
     email: '',
     mobile: '',
     college: '',
-    services: '',
-    pagesizes: '',
+    services: [],
+    pagesizes: [],
     password: ''
   });
 
@@ -24,8 +24,35 @@ export default function RegisterForm() {
     }));
   };
 
+  const handleCheckboxChange = (e) => {
+    const { name, value, checked } = e.target;
+    setFormData((prev) => {
+      const list = prev[name] || [];
+      if (checked) {
+        return {
+          ...prev,
+          [name]: [...list, value]
+        };
+      } else {
+        return {
+          ...prev,
+          [name]: list.filter((item) => item !== value)
+        };
+      }
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.services || formData.services.length === 0) {
+      alert("Please select at least one Service Type.");
+      return;
+    }
+    if (!formData.pagesizes || formData.pagesizes.length === 0) {
+      alert("Please select at least one Supported Page Size.");
+      return;
+    }
+
     try {
       const response = await axios.post("http://localhost:1500/api/printer/create", formData, {
         withCredentials: true
@@ -41,8 +68,8 @@ export default function RegisterForm() {
           email: '',
           mobile: '',
           college: '',
-          services: '',
-          pagesizes: '',
+          services: [],
+          pagesizes: [],
           password: ''
         });
         navigate("/login");
@@ -127,36 +154,47 @@ export default function RegisterForm() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="services">Services Provided</label>
-            <select
-              id="services"
-              name="services"
-              value={formData.services}
-              onChange={handleChange}
-              required
-            >
-              <option value="" disabled>Select a service type</option>
-              <option value="Black and White">Black and White</option>
-              <option value="Colour">Colour</option>
-            </select>
+            <label>Services Provided</label>
+            <div className="checkbox-group">
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="services"
+                  value="Black and White"
+                  checked={formData.services.includes("Black and White")}
+                  onChange={handleCheckboxChange}
+                />
+                Black and White
+              </label>
+              <label className="checkbox-label">
+                <input
+                  type="checkbox"
+                  name="services"
+                  value="Colour"
+                  checked={formData.services.includes("Colour")}
+                  onChange={handleCheckboxChange}
+                />
+                Colour
+              </label>
+            </div>
           </div>
 
           <div className="form-group">
-            <label htmlFor="pagesizes">Supported Page Sizes</label>
-            <select
-              id="pagesizes"
-              name="pagesizes"
-              value={formData.pagesizes}
-              onChange={handleChange}
-              required
-            >
-              <option value="" disabled>Select max page size</option>
-              <option value="A4">A4</option>
-              <option value="A3">A3</option>
-              <option value="A2">A2</option>
-              <option value="A1">A1</option>
-              <option value="A0">A0</option>
-            </select>
+            <label>Supported Page Sizes</label>
+            <div className="checkbox-group grid-checkboxes">
+              {["A4", "A3", "A2", "A1", "A0"].map((size) => (
+                <label className="checkbox-label" key={size}>
+                  <input
+                    type="checkbox"
+                    name="pagesizes"
+                    value={size}
+                    checked={formData.pagesizes.includes(size)}
+                    onChange={handleCheckboxChange}
+                  />
+                  {size}
+                </label>
+              ))}
+            </div>
           </div>
 
           <div className="form-group">

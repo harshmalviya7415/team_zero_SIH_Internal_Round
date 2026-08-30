@@ -96,13 +96,15 @@ export default function PrinterDashboard() {
               await axios.post("http://localhost:1500/api/job/status", {
                 jobId: data.jobId,
                 status: "Completed"
+              }, {
+                withCredentials: true
               });
 
-              // Locally update state so it instantly changes status badge to Ready for Collection
+              // Locally update state so it instantly changes status badge to Completed
               setOrders((prev) =>
                 prev.map((order) => {
                   if (order.id === data.jobId) {
-                    return { ...order, status: "Ready for Collection" };
+                    return { ...order, status: "Completed" };
                   }
                   return order;
                 })
@@ -189,17 +191,7 @@ export default function PrinterDashboard() {
           paperType: "75 GSM Standard",
           sides: job.duplex ? "Double-sided (Duplex)" : "Single-sided"
         },
-        status: job.printstatus === "Pending" 
-          ? "Queued" 
-          : job.printstatus === "In Progress" 
-          ? "Printing" 
-          : job.printstatus === "Completed" 
-          ? "Ready for Collection" 
-          : job.printstatus === "Collected"
-          ? "Completed"
-          : job.printstatus === "Cancelled"
-          ? "Cancelled"
-          : job.printstatus,
+        status: "Printing", // Set initial state directly to Printing as auto-spool starts
         placedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         completedAt: null
       };
@@ -248,9 +240,7 @@ export default function PrinterDashboard() {
             ? "Queued" 
             : job.printstatus === "In Progress" 
             ? "Printing" 
-            : job.printstatus === "Completed" 
-            ? "Ready for Collection" 
-            : job.printstatus === "Collected"
+            : job.printstatus === "Completed" || job.printstatus === "Collected"
             ? "Completed"
             : job.printstatus === "Cancelled"
             ? "Cancelled"
@@ -295,9 +285,8 @@ export default function PrinterDashboard() {
     }
   };
 
-  // Derived Summary Counts
   const pendingCount = orders.filter((o) => o.status === "Queued" || o.status === "Printing").length;
-  const readyCount = orders.filter((o) => o.status === "Ready for Collection").length;
+  const completedCount = orders.filter((o) => o.status === "Completed").length;
   const totalCount = orders.length;
 
   // Filter Logic
@@ -321,8 +310,8 @@ export default function PrinterDashboard() {
           <span className="kpi-value">{pendingCount}</span>
         </div>
         <div className="kpi-card green">
-          <h3>Eligible for Collection</h3>
-          <span className="kpi-value">{readyCount}</span>
+          <h3>Completed Jobs</h3>
+          <span className="kpi-value">{completedCount}</span>
         </div>
         <div className="kpi-card blue">
           <h3>Total Orders</h3>
@@ -343,7 +332,6 @@ export default function PrinterDashboard() {
             <option value="All">All Statuses</option>
             <option value="Queued">Queued</option>
             <option value="Printing">Printing</option>
-            <option value="Ready for Collection">Ready for Collection</option>
             <option value="Completed">Completed</option>
             <option value="Cancelled">Cancelled</option>
           </select>
@@ -359,7 +347,6 @@ export default function PrinterDashboard() {
                 <th>Print Specs</th>
                 <th>Status</th>
                 <th>Timestamps</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -409,28 +396,6 @@ export default function PrinterDashboard() {
                       {order.completedAt && (
                         <div className="sub-text"><strong>Ready:</strong> {order.completedAt}</div>
                       )}
-                    </td>
-
-                    {/* Actions */}
-                    <td>
-                      <div className="action-buttons">
-                        {order.status === "Ready for Collection" && (
-                          <button
-                            className="btn-action btn-complete"
-                            onClick={() => updateStatus(order.id, "Collected")}
-                          >
-                            Mark Collected
-                          </button>
-                        )}
-                        {order.status !== "Completed" && order.status !== "Cancelled" && (
-                          <button
-                            className="btn-action btn-cancel"
-                            onClick={() => updateStatus(order.id, "Cancelled")}
-                          >
-                            Cancel
-                          </button>
-                        )}
-                      </div>
                     </td>
                   </tr>
                 ))

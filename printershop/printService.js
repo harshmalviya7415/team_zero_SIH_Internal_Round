@@ -32,32 +32,32 @@ async function printCloudinaryPdf(pdfUrl, settings = {}) {
         await downloadFile(pdfUrl, tempFilePath);
         console.log(`PDF temporarily saved to: ${tempFilePath}`);
 
-        // 2.5 Stamp Job ID on the last page of the PDF using pdf-lib
+        // 2.5 Add a new page to the end of the PDF and print the Job ID on it
         if (settings.jobId) {
             try {
-                console.log(`Stamping Job ID: ${settings.jobId} on the last page of the PDF...`);
+                console.log(`Adding new page with Job ID: ${settings.jobId} to the end of the PDF...`);
                 const existingPdfBytes = fs.readFileSync(tempFilePath);
                 const pdfDoc = await PDFDocument.load(existingPdfBytes);
                 const pages = pdfDoc.getPages();
                 
-                if (pages.length > 0) {
-                    const lastPage = pages[pages.length - 1];
-                    const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-                    lastPage.drawText(`Order ID: ${settings.jobId}`, {
-                        x: 30,
-                        y: 15,
-                        size: 8,
-                        font: font,
-                        color: rgb(0.5, 0.5, 0.5), // Subtle gray
-                    });
-                    
-                    const pdfBytes = await pdfDoc.save();
-                    fs.writeFileSync(tempFilePath, pdfBytes);
-                    console.log(`Job ID successfully stamped on last page.`);
-                }
+                const dimensions = pages.length > 0 ? pages[0].getSize() : { width: 600, height: 800 };
+                const newPage = pdfDoc.addPage([dimensions.width, dimensions.height]);
+                
+                const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+                newPage.drawText(`Print Job ID: ${settings.jobId}`, {
+                    x: 50,
+                    y: dimensions.height - 50, // Top margin
+                    size: 10,
+                    font: font,
+                    color: rgb(0, 0, 0),
+                });
+                
+                const pdfBytes = await pdfDoc.save();
+                fs.writeFileSync(tempFilePath, pdfBytes);
+                console.log(`New page with Job ID successfully added to the end.`);
             } catch (pdfError) {
-                console.error("Failed to stamp Job ID on PDF:", pdfError.message);
-                // Continue printing anyway even if stamping fails
+                console.error("Failed to add Job ID page to PDF:", pdfError.message);
+                // Continue printing anyway even if page adding fails
             }
         }
 

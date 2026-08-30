@@ -2,14 +2,14 @@ const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
+const bodyParser = require('body-parser');
 const connectDb = require("./config/db");
 
 dotenv.config();
 
 const app = express();
-
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(
   cors({
@@ -17,7 +17,7 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
       "http://127.0.0.1:5173",
-      "http://127.0.0.1:5174"
+      "http://127.0.0.1:5174",
     ],
     credentials: true,
   }),
@@ -36,6 +36,9 @@ const { printerverify } = require("./controller/printerverify");
 const { joblist } = require("./controller/joblist");
 const { printerjoblist } = require("./controller/printerjoblist");
 const { initSocket } = require("./config/socket");
+const { uploadMedia } = require("./controller/media");
+const { paymentCreateOrder, paymentVerify } = require("./controller/payment");
+const { jobStatusUpdate } = require("./controller/jobstatus");
 
 const PORT = process.env.PORT || 1500;
 
@@ -55,9 +58,22 @@ app.get("/api/printer/verify", auth, printerverify);
 app.get("/api/job/user", auth, joblist);
 app.get("/api/job/printer", auth, printerjoblist);
 
+// Payment & Job Status persistence endpoints
+app.post("/api/payment/create-order", auth, paymentCreateOrder);
+app.post("/api/payment/verify", auth, paymentVerify);
+app.post("/api/job/status", auth, jobStatusUpdate);
+
+app.post(
+  "/api/upload",
+  auth,
+  require("./middleware/upload").single("file"),
+  uploadMedia,
+);
+
 const server = app.listen(PORT, async () => {
   await connectDb();
   console.log(`Server Started::: ${PORT}`);
 });
 
 initSocket(server);
+

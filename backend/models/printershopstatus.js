@@ -11,15 +11,18 @@ const printershopstatusSchema = new mongoose.Schema(
       type: String,
       required: true,
       enums: ["Active", "Inactive"],
+      default: "Inactive",
     },
     isavailableforbw: {
       type: Boolean,
       required: true,
+      default: false,
     },
     isavailableforcolor: {
       type: Boolean,
       required: true,
-    },   
+      default: false,
+    },
   },
 
   {

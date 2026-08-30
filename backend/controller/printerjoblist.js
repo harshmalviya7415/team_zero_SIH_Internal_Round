@@ -3,7 +3,7 @@ const Printdetails = require("../models/printdetails");
 const printerjoblist = async (req, res) => {
   try {
     const printershopid = req.userId;
-    const jobs = await Printdetails.find({ printershopid })
+    const jobs = await Printdetails.find({ printershopid, printstatus: { $ne: "Pending" } })
       .populate("userid")
       .sort({ createdAt: -1 });
     res.json(jobs);

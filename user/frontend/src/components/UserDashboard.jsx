@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { io } from "socket.io-client";
 import "./UserDashboard.css";
 
 
@@ -98,6 +99,7 @@ export default function UserDashboard() {
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [showNewJobForm, setShowNewJobForm] = useState(false);
   const [payingJobId, setPayingJobId] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleSignOut = () => {
     localStorage.removeItem("user");
@@ -124,20 +126,54 @@ export default function UserDashboard() {
     const fetchShops = async () => {
       try {
         const response = await axios.get("http://localhost:1500/api/printer/list");
-        const mapped = response.data.map(p => ({
-          id: p._id,
-          name: p.shopname || p.fullname,
-          distance: "0.5 km away",
-          status: "open",
-          services: [p.services || "B/W"],
-          pagesizes: p.pagesizes || "A4",
-        }));
+        const mapped = response.data.map(p => {
+          const isActive = p.statusDetails && p.statusDetails.status === "Active";
+          return {
+            id: p._id,
+            name: p.shopname || p.fullname,
+            distance: "0.5 km away",
+            status: isActive ? "open" : "closed",
+            services: [p.services || "B/W"],
+            pagesizes: p.pagesizes || "A4",
+          };
+        });
         setShops(mapped);
       } catch (error) {
         console.error("Error fetching shops:", error);
       }
     };
     fetchShops();
+  }, []);
+
+  useEffect(() => {
+    const socket = io("http://localhost:1500");
+
+    socket.on("connect", () => {
+      console.log("UserDashboard successfully connected to Socket.io server");
+    });
+
+    socket.on("connect_error", (error) => {
+      console.error("UserDashboard Socket.io connection error:", error);
+    });
+
+    socket.on("printer_status_changed", (data) => {
+      console.log("Printer status changed socket event received:", data);
+      setShops((prev) =>
+        prev.map((shop) => {
+          if (shop.id === data.printershopid) {
+            return {
+              ...shop,
+              status: data.status === "Active" ? "open" : "closed",
+            };
+          }
+          return shop;
+        })
+      );
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   useEffect(() => {
@@ -149,17 +185,34 @@ export default function UserDashboard() {
           withCredentials: true
         });
         
-        const mapped = response.data.map(j => ({
-          id: j._id,
-          fileName: j.urlofprinddocument.split("/").pop(),
-          shopName: j.printershopid ? (j.printershopid.shopname || j.printershopid.fullname) : "Unknown Shop",
-          pages: parseInt(j.printpagenos.split("-")[1]) || 1,
-          color: j.printcolor === "Colour" ? "Color" : "B/W",
-          copies: j.printcopies,
-          orientation: "Portrait",
-          amount: j.printcopies * (parseInt(j.printpagenos.split("-")[1]) || 1) * (j.printcolor === "Colour" ? 5 : 2),
-          status: j.printstatus === "Pending" ? "payment_pending" : j.printstatus,
-        }));
+        const mapped = response.data.map(j => {
+          const pagesCount = (() => {
+            const rangeStr = j.printpagenos || "";
+            if (rangeStr.toLowerCase() === "all") return 1;
+            const match = rangeStr.match(/^(\d+)-(\d+)$/);
+            if (match) return parseInt(match[2]) - parseInt(match[1]) + 1;
+            if (rangeStr.match(/^(\d+)(,\d+)*$/)) return rangeStr.split(",").length;
+            return 1;
+          })();
+
+          return {
+            id: j._id,
+            fileName: j.urlofprinddocument.split("/").pop(),
+            shopName: j.printershopid ? (j.printershopid.shopname || j.printershopid.fullname) : "Unknown Shop",
+            pages: pagesCount,
+            color: j.printcolor === "Colour" ? "Color" : "B/W",
+            copies: j.printcopies,
+            orientation: "Portrait",
+            amount: j.printcopies * pagesCount * (j.printcolor === "Colour" ? 5 : 2),
+            status: j.printstatus === "Pending" 
+              ? "payment_pending" 
+              : j.printstatus === "In Progress" 
+              ? "printing" 
+              : j.printstatus === "Completed" 
+              ? "ready" 
+              : j.printstatus,
+          };
+        });
         setJobs(mapped);
       } catch (error) {
         console.error("Error fetching jobs:", error);
@@ -277,6 +330,24 @@ export default function UserDashboard() {
     setNewJob((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
+  const handlePageRangeChange = (e) => {
+    const value = e.target.value;
+    // Block typing of invalid characters (only allow numbers, hyphens, commas, spaces, and letters)
+    if (/[^\d\-,\sa-zA-Z]/.test(value)) {
+      return;
+    }
+    setNewJob((prev) => ({ ...prev, pages: value }));
+  };
+
+  useEffect(() => {
+    if (newJob.pages) {
+      const error = validatePageRange(newJob.pages, totalPages);
+      setPageRangeError(error);
+    } else {
+      setPageRangeError("");
+    }
+  }, [newJob.pages, totalPages]);
+
   const handleNewJobSubmit = async (e) => {
     e.preventDefault();
     const shop = shops.find((s) => s.id === newJob.shopId);
@@ -289,13 +360,37 @@ export default function UserDashboard() {
     }
     setPageRangeError("");
 
+    if (!newJob.file) {
+      alert("Please select a PDF file to upload.");
+      return;
+    }
+
     const pagesToPrint = getPagesToPrintCount(newJob.pages, totalPages);
     const copies = Number(newJob.copies) || 1;
     const amount = pagesToPrint * copies * ratePerPage(newJob.color);
 
-    const payload = {
+    setIsUploading(true);
+    let cloudinaryUrl = "";
+    try {
+      const formData = new FormData();
+      formData.append("file", newJob.file);
+      const uploadResponse = await axios.post("http://localhost:1500/api/upload", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data"
+        },
+        withCredentials: true
+      });
+      cloudinaryUrl = uploadResponse.data.cloudinary_url;
+    } catch (uploadError) {
+      console.error("Error uploading file to Cloudinary:", uploadError);
+      alert("Failed to upload file to Cloudinary. Please try again.");
+      setIsUploading(false);
+      return;
+    }
+
+    const printSpecs = {
       printershopid: newJob.shopId,
-      urlofprinddocument: `https://example.com/docs/${newJob.file ? newJob.file.name : "document.pdf"}`,
+      urlofprinddocument: cloudinaryUrl,
       printcopies: copies,
       printpagenos: newJob.pages,
       printpapersize: newJob.printpapersize || "A4",
@@ -303,78 +398,261 @@ export default function UserDashboard() {
     };
 
     try {
-      const response = await axios.post("http://localhost:1500/api/job/create", payload, {
+      // 1. Create order on the backend with print specs
+      const response = await axios.post("http://localhost:1500/api/payment/create-order", { printSpecs }, {
         withCredentials: true
       });
 
-      if (response.data.mess) {
-        alert(response.data.mess);
-      } else {
-        alert("Print Job Created Successfully!");
-        const addedJob = {
-          id: response.data._id,
-          fileName: response.data.urlofprinddocument.split("/").pop() || "untitled_document.pdf",
-          shopName: shop.name,
-          pages: pagesToPrint,
-          color: newJob.color,
-          copies,
-          orientation: newJob.orientation,
-          amount,
-          status: "payment_pending",
-        };
-        setJobs((prev) => [addedJob, ...prev]);
-        setShowNewJobForm(false);
+      if (response.data.message) {
+        alert(response.data.message);
+        setIsUploading(false);
+        return;
       }
+
+      const { order_id, amount: orderAmount, currency, key_id } = response.data;
+
+      // Detect mock payment order (credentials missing or expired)
+      if (order_id.startsWith("order_mock_")) {
+        console.log("Mock order detected (credentials missing or expired). Bypassing Razorpay Checkout modal.");
+        const mockResponse = {
+          razorpay_order_id: order_id,
+          razorpay_payment_id: `pay_mock_${Date.now()}`,
+          razorpay_signature: "mock_signature_bypass",
+        };
+        try {
+          const verifyRes = await axios.post(
+            "http://localhost:1500/api/payment/verify",
+            mockResponse,
+            { withCredentials: true }
+          );
+
+          if (verifyRes.data.status === "ok") {
+            alert("Payment Verified (Offline Test Mode) & Print Job Placed Successfully!");
+            const job = verifyRes.data.job;
+            const pagesCount = (() => {
+              const rangeStr = job.printpagenos || "";
+              if (rangeStr.toLowerCase() === "all") return 1;
+              const match = rangeStr.match(/^(\d+)-(\d+)$/);
+              if (match) return parseInt(match[2]) - parseInt(match[1]) + 1;
+              if (rangeStr.match(/^(\d+)(,\d+)*$/)) return rangeStr.split(",").length;
+              return 1;
+            })();
+
+            const addedJob = {
+              id: job._id,
+              fileName: job.urlofprinddocument.split("/").pop() || "untitled_document.pdf",
+              shopName: shop.name,
+              pages: pagesCount,
+              color: job.printcolor === "Colour" ? "Color" : "B/W",
+              copies: job.printcopies,
+              orientation: "Portrait",
+              amount: job.printcopies * pagesCount * (job.printcolor === "Colour" ? 5 : 2),
+              status: "printing",
+            };
+            setJobs((prev) => [addedJob, ...prev]);
+            setShowNewJobForm(false);
+          } else {
+            alert("Offline payment verification failed.");
+          }
+        } catch (verifyError) {
+          console.error("Test verification error:", verifyError);
+          alert("Error verifying test payment signature");
+        } finally {
+          setIsUploading(false);
+        }
+        return;
+      }
+
+      // 2. Open Razorpay checkout options immediately
+      const options = {
+        key: key_id,
+        amount: orderAmount,
+        currency: currency,
+        name: "Campus Print Service",
+        description: `Payment for printing: ${cloudinaryUrl.split("/").pop() || "document.pdf"}`,
+        order_id: order_id,
+        prefill: {
+          name: user ? user.fullname : "Customer",
+          email: user ? user.email : "customer@example.com",
+          contact: user ? String(user.mobile) : "9999999999",
+        },
+        theme: {
+          color: "#3B82F6",
+        },
+        handler: async function (razorpayResponse) {
+          try {
+            // 3. Verify payment signature on backend which creates the Printdetails job
+            const verifyRes = await axios.post(
+              "http://localhost:1500/api/payment/verify",
+              {
+                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                razorpay_signature: razorpayResponse.razorpay_signature,
+              },
+              { withCredentials: true }
+            );
+
+            if (verifyRes.data.status === "ok") {
+              alert("Payment Verified & Print Job Placed Successfully!");
+              const job = verifyRes.data.job;
+              const pagesCount = (() => {
+                const rangeStr = job.printpagenos || "";
+                if (rangeStr.toLowerCase() === "all") return 1;
+                const match = rangeStr.match(/^(\d+)-(\d+)$/);
+                if (match) return parseInt(match[2]) - parseInt(match[1]) + 1;
+                if (rangeStr.match(/^(\d+)(,\d+)*$/)) return rangeStr.split(",").length;
+                return 1;
+              })();
+
+              const addedJob = {
+                id: job._id,
+                fileName: job.urlofprinddocument.split("/").pop() || "untitled_document.pdf",
+                shopName: shop.name,
+                pages: pagesCount,
+                color: job.printcolor === "Colour" ? "Color" : "B/W",
+                copies: job.printcopies,
+                orientation: "Portrait",
+                amount: job.printcopies * pagesCount * (job.printcolor === "Colour" ? 5 : 2),
+                status: "printing",
+              };
+              setJobs((prev) => [addedJob, ...prev]);
+              setShowNewJobForm(false);
+            } else {
+              alert("Payment verification failed. Print job could not be placed.");
+            }
+          } catch (verifyError) {
+            console.error("Verification error:", verifyError);
+            alert("Error verifying payment signature");
+          } finally {
+            setIsUploading(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsUploading(false);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
     } catch (error) {
-      console.error("Error submitting job:", error);
-      alert("Failed to submit print job. Please login again.");
+      console.error("Error creating payment order:", error);
+      const errMsg = error.response && error.response.data && error.response.data.message
+        ? error.response.data.message
+        : "Failed to initiate payment. Please try again.";
+      alert(errMsg);
+      setIsUploading(false);
     }
   };
 
-  const handlePay = (jobId) => {
+  const handlePay = async (jobId) => {
     setPayingJobId(jobId);
-    window.setTimeout(() => {
-      setJobs((prev) =>
-        prev.map((j) => {
-          if (j.id !== jobId) return j;
-          const success = Math.random() > 0.15;
-          return success
-            ? { ...j, status: "printing" }
-            : { ...j, status: "payment_failed" };
-        })
-      );
+    const jobItem = jobs.find((j) => j.id === jobId);
+    if (!jobItem) {
+      alert("Job details not found");
       setPayingJobId(null);
+      return;
+    }
 
-      setJobs((prev) => {
-        const job = prev.find((j) => j.id === jobId);
-        if (job && job.status === "printing") {
-          window.setTimeout(() => {
-            setJobs((cur) =>
-              cur.map((j) =>
-                j.id === jobId
-                  ? { ...j, status: "ready", pickupTime: "Today, in ~30 mins" }
-                  : j
+    try {
+      // 1. Create order on the backend
+      const response = await axios.post(
+        "http://localhost:1500/api/payment/create-order",
+        { jobId, amount: jobItem.amount },
+        { withCredentials: true }
+      );
+
+      const { order_id, amount: orderAmount, currency, key_id } = response.data;
+
+      // 2. Open Razorpay checkout options
+      const options = {
+        key: key_id,
+        amount: orderAmount,
+        currency: currency,
+        name: "Campus Print Service",
+        description: `Payment for print job: ${jobItem.fileName}`,
+        order_id: order_id,
+        prefill: {
+          name: user ? user.fullname : "Customer",
+          email: user ? user.email : "customer@example.com",
+          contact: user ? String(user.mobile) : "9999999999",
+        },
+        theme: {
+          color: "#3B82F6",
+        },
+        handler: async function (razorpayResponse) {
+          try {
+            // 3. Verify payment signature on backend
+            const verifyRes = await axios.post(
+              "http://localhost:1500/api/payment/verify",
+              {
+                razorpay_order_id: razorpayResponse.razorpay_order_id,
+                razorpay_payment_id: razorpayResponse.razorpay_payment_id,
+                razorpay_signature: razorpayResponse.razorpay_signature,
+                jobId: jobId,
+              },
+              { withCredentials: true }
+            );
+
+            if (verifyRes.data.status === "ok") {
+              alert("Payment Verified & Success!");
+              setJobs((prev) =>
+                prev.map((j) =>
+                  j.id === jobId ? { ...j, status: "printing" } : j
+                )
+              );
+            } else {
+              alert("Payment verification failed. Please try again.");
+              setJobs((prev) =>
+                prev.map((j) =>
+                  j.id === jobId ? { ...j, status: "payment_failed" } : j
+                )
+              );
+            }
+          } catch (verifyError) {
+            console.error("Verification error:", verifyError);
+            alert("Error verifying payment signature");
+            setJobs((prev) =>
+              prev.map((j) =>
+                j.id === jobId ? { ...j, status: "payment_failed" } : j
               )
             );
-            setNotifications((prev) => [
-              {
-                id: `note-${Date.now()}`,
-                text: `Your print "${job.fileName}" at ${job.shopName} is ready for pickup.`,
-                time: "just now",
-              },
-              ...prev,
-            ]);
-          }, 1800);
-        }
-        return prev;
-      });
-    }, 1400);
+          } finally {
+            setPayingJobId(null);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setPayingJobId(null);
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Payment initiation error:", error);
+      alert("Failed to initiate payment. Please try again.");
+      setPayingJobId(null);
+    }
   };
 
-  const handleCollect = (jobId) => {
-    setJobs((prev) =>
-      prev.map((j) => (j.id === jobId ? { ...j, status: "collected" } : j))
-    );
+  const handleCollect = async (jobId) => {
+    try {
+      await axios.post(
+        "http://localhost:1500/api/job/status",
+        { jobId, status: "collected" },
+        { withCredentials: true }
+      );
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, status: "collected" } : j))
+      );
+      alert("Job marked as collected successfully!");
+    } catch (error) {
+      console.error("Error marking job as collected:", error);
+      alert("Failed to mark job as collected in database");
+    }
   };
 
   return (
@@ -471,7 +749,7 @@ export default function UserDashboard() {
                     type="text"
                     placeholder="e.g. 1-6 or 1,2,3 or all"
                     value={newJob.pages}
-                    onChange={handleNewJobChange("pages")}
+                    onChange={handlePageRangeChange}
                     required
                   />
                   {pageRangeError && <span className="error-text" style={{color: "#A35C5C", fontSize: "0.75rem", display: "block", marginTop: "0.25rem"}}>{pageRangeError}</span>}
@@ -525,8 +803,8 @@ export default function UserDashboard() {
               </div>
 
               <div className="form-actions">
-                <button type="submit" className="btn-submit">
-                  Submit &amp; Continue to Payment
+                <button type="submit" className="btn-submit" disabled={isUploading}>
+                  {isUploading ? "Uploading PDF..." : "Submit & Continue to Payment"}
                 </button>
               </div>
               <p className="form-hint">
@@ -565,13 +843,15 @@ export default function UserDashboard() {
                     <span className={`status-badge status-${shop.status}`}>
                       {STATUS_LABEL[shop.status]}
                     </span>
-                    <button
-                      className="btn-outline btn-small"
-                      disabled={!openForOrder(shop)}
-                      onClick={() => startNewJob(shop.id)}
-                    >
-                      Print here
-                    </button>
+                    {shop.status !== "closed" && (
+                      <button
+                        className="btn-outline btn-small"
+                        disabled={!openForOrder(shop)}
+                        onClick={() => startNewJob(shop.id)}
+                      >
+                        Print here
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}

@@ -5,7 +5,7 @@ import "./UserDashboard.css";
 
 
 const STATUS_LABEL = {
-  open: "Open · Available now",
+  open: "Open now",
   busy: "Busy",
   closed: "Closed",
   scheduled: "Open · Scheduled only",
@@ -79,9 +79,9 @@ const INITIAL_JOBS = [
 
 const INITIAL_NOTIFICATIONS = [
   {
-    id: "note-1",
-    text: "Your print at QuickPrint Koramangala is ready for pickup.",
-    time: "10 min ago",
+    id: "",
+    text: "",
+    time: "",
   },
 ];
 
@@ -566,7 +566,7 @@ export default function UserDashboard() {
                       {STATUS_LABEL[shop.status]}
                     </span>
                     <button
-                      className="btn-outline btn-small"
+                      className="btn-outline btn-small bg-saph"
                       disabled={!openForOrder(shop)}
                       onClick={() => startNewJob(shop.id)}
                     >

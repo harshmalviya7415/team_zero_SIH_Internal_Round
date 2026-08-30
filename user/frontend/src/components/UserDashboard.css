@@ -36,8 +36,8 @@
   --color-border-hover: #3A4053;
 
   /* Success */
-  --color-success: #4ADE80;
-  --color-success-light: #142D20;
+  --color-success: #1e1e2e;
+  --color-success-light: #94e2d5 ;
 
   /* Warning */
   --color-warning: #F5C15C;
@@ -451,10 +451,12 @@ body {
 
 .btn-small {
   padding: 0.35rem 0.9rem;
-
   font-size: 0.78rem;
 }
 
+.bg-saph{
+  background-color: #6c7086;
+}
 
 /* =========================================================
    STAT CARDS
@@ -778,9 +780,9 @@ body {
 
   font-weight: 600;
 
-  padding: 0.25rem 0.65rem;
+  padding: 0.15rem 0.45rem;
 
-  border-radius: 20px;
+  border-radius: 12px;
 
   text-transform: uppercase;
 

@@ -158,17 +158,24 @@ export default function UserDashboard() {
 
     socket.on("printer_status_changed", (data) => {
       console.log("Printer status changed socket event received:", data);
-      setShops((prev) =>
-        prev.map((shop) => {
+      setShops((prev) => {
+        let matched = false;
+        const updated = prev.map((shop) => {
           if (shop.id === data.printershopid) {
+            matched = true;
+            console.log(`Matching shop found: "${shop.name}". Changing status to ${data.status === "Active" ? "open" : "closed"}`);
             return {
               ...shop,
               status: data.status === "Active" ? "open" : "closed",
             };
           }
           return shop;
-        })
-      );
+        });
+        if (!matched) {
+          console.warn(`No local shop ID matched the broadcasted ID: ${data.printershopid}`);
+        }
+        return updated;
+      });
     });
 
     return () => {
@@ -843,25 +850,15 @@ export default function UserDashboard() {
                     <span className={`status-badge status-${shop.status}`}>
                       {STATUS_LABEL[shop.status]}
                     </span>
-<<<<<<< HEAD
-                    <button
-                      className="btn-outline btn-small bg-saph"
-                      disabled={!openForOrder(shop)}
-                      onClick={() => startNewJob(shop.id)}
-                    >
-                      Print here
-                    </button>
-=======
                     {shop.status !== "closed" && (
                       <button
-                        className="btn-outline btn-small"
+                        className="btn-outline btn-small bg-saph"
                         disabled={!openForOrder(shop)}
                         onClick={() => startNewJob(shop.id)}
                       >
                         Print here
                       </button>
                     )}
->>>>>>> d31031c7c32b6da1a91b024adde59e0286de7ffb
                   </div>
                 </div>
               ))}

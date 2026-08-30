@@ -73,6 +73,13 @@ app.post(
 const server = app.listen(PORT, async () => {
   await connectDb();
   console.log(`Server Started::: ${PORT}`);
+  try {
+    const Printershopstatus = require("./models/printershopstatus");
+    await Printershopstatus.updateMany({}, { status: "Inactive" });
+    console.log("Initialized: Reset all printer shop statuses to Inactive on startup.");
+  } catch (err) {
+    console.error("Error resetting printer shop statuses on startup:", err);
+  }
 });
 
 initSocket(server);

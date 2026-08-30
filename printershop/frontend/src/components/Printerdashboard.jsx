@@ -163,21 +163,31 @@ export default function PrinterDashboard() {
   }, [printer]);
 
   // Status transition handlers
-  const updateStatus = (orderId, newStatus) => {
-    setOrders((prev) =>
-      prev.map((order) =>
-        order.id === orderId
-          ? {
-              ...order,
-              status: newStatus,
-              completedAt:
-                newStatus === "Ready for Collection"
-                  ? new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-                  : order.completedAt,
-            }
-          : order
-      )
-    );
+  const updateStatus = async (orderId, newStatus) => {
+    try {
+      await axios.post(
+        "http://localhost:1500/api/job/status",
+        { jobId: orderId, status: newStatus },
+        { withCredentials: true }
+      );
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId
+            ? {
+                ...order,
+                status: newStatus,
+                completedAt:
+                  newStatus === "Ready for Collection"
+                    ? new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                    : order.completedAt,
+              }
+            : order
+        )
+      );
+    } catch (error) {
+      console.error("Error updating job status in DB:", error);
+      alert("Failed to update job status in database.");
+    }
   };
 
   // Derived Summary Counts

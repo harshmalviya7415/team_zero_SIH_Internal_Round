@@ -27,6 +27,16 @@ Our system bridges college web portals with local print shop hardware:
 
 ---
 
+## 🎥 Project Demo Video
+
+Watch the system in action:
+
+[📺 Play Demo Video](asset/Demo%20Vedio-compressed.mp4)
+
+<video src="asset/Demo%20Vedio-compressed.mp4" controls width="100%"></video>
+
+---
+
 ## 📂 Repository Architecture
 
 ```text
@@ -90,6 +100,9 @@ team_zero_SIH_Internal_Round/
    JWT_SECRET=your_jwt_secret_here
    RAZORPAY_KEY_ID=your_razorpay_key_id
    RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+   CLOUDINARY_CLOUD_NAME=your_cloudinary_cloud_name
+   CLOUDINARY_API_KEY=your_cloudinary_api_key
+   CLOUDINARY_API_SECRET=your_cloudinary_api_secret
    ```
 4. Start the backend API & Socket server:
    ```bash
@@ -172,3 +185,4 @@ For local sandbox testing without active Razorpay credentials:
 *   **Offline Resilience**: Implement Electron-level local storage (SQLite or local JSON store) to save pending print jobs locally. In case of intermittent campus Wi-Fi drops, the print agent will queue jobs locally and resume printing automatically once connection is restored.
 *   **Live Queue Depth Estimation**: Display estimated wait times on the student portal based on the active queue size of each print shop, enabling users to choose less busy locations.
 *   **QR Code Collection**: Allow operators to scan a QR code from the user's phone to verify collections and automatically mark completed print jobs as picked up.
+*   **Dynamic Capability Status Configuration**: Allow print shop operators to toggle availability status for specific print capabilities (e.g. marking "Colour" or "A3 paper size" as temporarily unavailable due to toner depletion or tray exhaustion), instantly disabling those option selections on the student checkout portal.

@@ -162,10 +162,13 @@ export default function UserDashboard() {
     fetchJobs();
   }, [user]);
 
+  const [totalPages, setTotalPages] = useState(1);
+  const [pageRangeError, setPageRangeError] = useState("");
+
   const [newJob, setNewJob] = useState({
     shopId: "",
-    urlofprinddocument: "",
-    pages: 1,
+    file: null,
+    pages: "",
     color: "B/W",
     orientation: "Portrait",
     copies: 1,
@@ -185,14 +188,83 @@ export default function UserDashboard() {
   const startNewJob = (shopId) => {
     setNewJob({
       shopId: shopId || "",
-      urlofprinddocument: "",
-      pages: 1,
+      file: null,
+      pages: "",
       color: "B/W",
       orientation: "Portrait",
       copies: 1,
       printpapersize: "A4",
     });
+    setTotalPages(1);
+    setPageRangeError("");
     setShowNewJobForm(true);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setNewJob((prev) => ({ ...prev, file }));
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      const arr = new Uint8Array(evt.target.result);
+      const text = new TextDecoder("utf-8").decode(arr.slice(0, 100000));
+      const matches = text.match(/\/Count\s*(\d+)/g);
+      let pagesCount = 1;
+      if (matches) {
+        const counts = matches.map(m => parseInt(m.match(/\d+/)[0]));
+        pagesCount = Math.max(...counts);
+      }
+      console.log("Parsed PDF Total Pages:", pagesCount);
+      setTotalPages(pagesCount);
+    };
+    reader.readAsArrayBuffer(file);
+  };
+
+  const validatePageRange = (rangeStr, maxPages) => {
+    if (!rangeStr.trim()) return "Page range is required";
+    if (rangeStr.toLowerCase() === "all") return "";
+
+    const rangeRegex = /^(\d+)-(\d+)$/;
+    const match = rangeStr.match(rangeRegex);
+    if (match) {
+      const start = parseInt(match[1]);
+      const end = parseInt(match[2]);
+      if (start < 1 || end > maxPages || start > end) {
+        return `Invalid range. Must be between 1 and ${maxPages}.`;
+      }
+      return "";
+    }
+
+    const listRegex = /^(\d+)(,\d+)*$/;
+    if (rangeStr.match(listRegex)) {
+      const pages = rangeStr.split(",").map(Number);
+      const invalid = pages.some(p => p < 1 || p > maxPages);
+      if (invalid) {
+        return `Invalid pages. Must be between 1 and ${maxPages}.`;
+      }
+      return "";
+    }
+
+    return "Invalid format. Use e.g. 1-6, 1,3,5 or all.";
+  };
+
+  const getPagesToPrintCount = (rangeStr, maxPages) => {
+    if (rangeStr.toLowerCase() === "all") return maxPages;
+
+    const rangeRegex = /^(\d+)-(\d+)$/;
+    const match = rangeStr.match(rangeRegex);
+    if (match) {
+      return parseInt(match[2]) - parseInt(match[1]) + 1;
+    }
+
+    const listRegex = /^(\d+)(,\d+)*$/;
+    if (rangeStr.match(listRegex)) {
+      return rangeStr.split(",").length;
+    }
+
+    return 1;
   };
 
   const handleNewJobChange = (field) => (e) => {
@@ -204,15 +276,22 @@ export default function UserDashboard() {
     const shop = shops.find((s) => s.id === newJob.shopId);
     if (!shop) return;
 
-    const pages = Number(newJob.pages) || 1;
+    const error = validatePageRange(newJob.pages, totalPages);
+    if (error) {
+      setPageRangeError(error);
+      return;
+    }
+    setPageRangeError("");
+
+    const pagesToPrint = getPagesToPrintCount(newJob.pages, totalPages);
     const copies = Number(newJob.copies) || 1;
-    const amount = pages * copies * ratePerPage(newJob.color);
+    const amount = pagesToPrint * copies * ratePerPage(newJob.color);
 
     const payload = {
       printershopid: newJob.shopId,
-      urlofprinddocument: newJob.urlofprinddocument,
+      urlofprinddocument: `https://example.com/docs/${newJob.file ? newJob.file.name : "document.pdf"}`,
       printcopies: copies,
-      printpagenos: `1-${pages}`,
+      printpagenos: newJob.pages,
       printpapersize: newJob.printpapersize || "A4",
       printcolor: newJob.color === "Color" ? "Colour" : "Black and White"
     };
@@ -230,7 +309,7 @@ export default function UserDashboard() {
           id: response.data._id,
           fileName: response.data.urlofprinddocument.split("/").pop() || "untitled_document.pdf",
           shopName: shop.name,
-          pages,
+          pages: pagesToPrint,
           color: newJob.color,
           copies,
           orientation: newJob.orientation,
@@ -362,27 +441,28 @@ export default function UserDashboard() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="urlofprinddocument">Document URL</label>
+                <label htmlFor="file">Upload Document (PDF)</label>
                 <input
-                  id="urlofprinddocument"
-                  type="url"
-                  placeholder="e.g. https://example.com/docs/report.pdf"
-                  value={newJob.urlofprinddocument}
-                  onChange={handleNewJobChange("urlofprinddocument")}
+                  id="file"
+                  type="file"
+                  accept="application/pdf"
+                  onChange={handleFileChange}
                   required
                 />
               </div>
 
               <div className="form-row">
                 <div className="form-group">
-                  <label htmlFor="pages">Pages</label>
+                  <label htmlFor="pages">Page Range</label>
                   <input
                     id="pages"
-                    type="number"
-                    min="1"
+                    type="text"
+                    placeholder="e.g. 1-6 or 1,2,3 or all"
                     value={newJob.pages}
                     onChange={handleNewJobChange("pages")}
+                    required
                   />
+                  {pageRangeError && <span className="error-text" style={{color: "#A35C5C", fontSize: "0.75rem", display: "block", marginTop: "0.25rem"}}>{pageRangeError}</span>}
                 </div>
                 <div className="form-group">
                   <label htmlFor="copies">Copies</label>

@@ -90,6 +90,7 @@ function ratePerPage(color) {
 }
 
 export default function UserDashboard() {
+
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [shops, setShops] = useState([]);
@@ -97,6 +98,11 @@ export default function UserDashboard() {
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS);
   const [showNewJobForm, setShowNewJobForm] = useState(false);
   const [payingJobId, setPayingJobId] = useState(null);
+
+  const handleSignOut = () => {
+    localStorage.removeItem("user");
+    navigate('/login', { replace: true }); // Add replace: true
+  };
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -385,6 +391,12 @@ export default function UserDashboard() {
                 {user ? user.fullname.split(" ").map(n => n[0]).join("").toUpperCase() : "U"}
               </span>
               {user ? user.fullname : "User"}
+              <div>
+      
+              <button onClick={handleSignOut} className="btn-signout">
+                Sign Out
+              </button>
+            </div>
             </div>
             <button className="btn-submit" onClick={() => startNewJob("")}>
               + New Print Job
